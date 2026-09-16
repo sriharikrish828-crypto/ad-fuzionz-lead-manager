@@ -406,23 +406,27 @@ Format:
         body = extract_tag(raw, "body")
         wa_tag = extract_tag(raw, "whatsapp") or extract_tag(raw, "dm")
 
+        combined_resp = (subject + " " + body + " " + wa_tag).lower()
+        if "cake" in combined_resp or "video ad" in combined_resp or "recipe" in combined_resp:
+            return get_local_fallback(clean_target, brand, channel_type, context_info, user_notes, pitch_type, genre)
+
         fallback_dict = format_pitch_by_genre(clean_target, brand, meta, genre, user_notes, pitch_type)
 
         if pitch_type == "whatsapp" and wa_tag:
-            return {"subject": "", "body": "", "whatsapp_pitch": wa_tag, "linkedin_pitch": "", "social_pitch": ""}
+            return {"subject": "", "body": "", "whatsapp_pitch": strip_emojis(wa_tag), "linkedin_pitch": "", "social_pitch": ""}
         elif pitch_type == "linkedin" and body:
-            return {"subject": f"Connecting with {clean_target}", "body": body, "whatsapp_pitch": "", "linkedin_pitch": body, "social_pitch": ""}
+            return {"subject": f"Connecting with {clean_target}", "body": strip_emojis(body), "whatsapp_pitch": "", "linkedin_pitch": strip_emojis(body), "social_pitch": ""}
         elif pitch_type == "social" and body:
-            return {"subject": f"Hey {clean_target}", "body": body, "whatsapp_pitch": "", "linkedin_pitch": "", "social_pitch": body}
+            return {"subject": f"Hey {clean_target}", "body": strip_emojis(body), "whatsapp_pitch": "", "linkedin_pitch": "", "social_pitch": strip_emojis(body)}
         elif pitch_type == "email" and body:
-            return {"subject": subject or fallback_dict["subject"], "body": body, "whatsapp_pitch": "", "linkedin_pitch": "", "social_pitch": ""}
+            return {"subject": strip_emojis(subject or fallback_dict["subject"]), "body": strip_emojis(body), "whatsapp_pitch": "", "linkedin_pitch": "", "social_pitch": ""}
         elif body or wa_tag:
             return {
-                "subject": subject or fallback_dict["subject"],
-                "body": body or fallback_dict["body"],
-                "whatsapp_pitch": wa_tag or fallback_dict["whatsapp_pitch"],
-                "linkedin_pitch": body or fallback_dict["linkedin_pitch"],
-                "social_pitch": body or wa_tag or fallback_dict["social_pitch"]
+                "subject": strip_emojis(subject or fallback_dict["subject"]),
+                "body": strip_emojis(body or fallback_dict["body"]),
+                "whatsapp_pitch": strip_emojis(wa_tag or fallback_dict["whatsapp_pitch"]),
+                "linkedin_pitch": strip_emojis(body or fallback_dict["linkedin_pitch"]),
+                "social_pitch": strip_emojis(body or wa_tag or fallback_dict["social_pitch"])
             }
     except Exception:
         pass

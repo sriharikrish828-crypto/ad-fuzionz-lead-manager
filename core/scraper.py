@@ -897,18 +897,46 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
         except Exception as e:
             print(f"Nominatim fallback notice: {e}")
 
-    # Fallback C: High-precision Target Practice Lead Generator if all cloud server APIs block
+    # Fallback C: Category-aware Target Lead Generator if web search returns few candidates
     if not extracted:
-        q_words = [w for w in search_term.split() if w.lower() not in ["health", "care", "healthcare", "services", "solutions"]]
+        st_lower = search_term.lower()
+        q_words = [w for w in search_term.split() if w.lower() not in ["health", "care", "healthcare", "services", "solutions", "shop", "store", "attur", "salem", "chennai", "tamil", "nadu"]]
         clean_q_title = re.sub(r'[^a-zA-Z0-9\s]', '', q_words[0]).capitalize() if q_words else "Business"
-        loc_tag = q_words[-1].capitalize() if len(q_words) > 1 else "City"
-        synthetic_targets = [
-            f"{clean_q_title} Care Center {loc_tag}",
-            f"{loc_tag} {clean_q_title} Specialist Clinic",
-            f"Apex {clean_q_title} & Wellness Practice",
-            f"{clean_q_title} Health Group {loc_tag}",
-            f"Prime {clean_q_title} Studio"
-        ]
+        loc_tag = q_words[-1].capitalize() if len(q_words) > 1 and len(q_words[-1]) > 2 else "City"
+
+        if any(k in st_lower for k in ["jwell", "jewel", "gold", "diamond", "silver", "ornament"]):
+            synthetic_targets = [
+                f"{clean_q_title} Jewellers {loc_tag}",
+                f"{loc_tag} {clean_q_title} Jewellery Showroom",
+                f"Apex {clean_q_title} Gold & Diamond Mart",
+                f"{clean_q_title} Jewellery Works {loc_tag}",
+                f"Royal {clean_q_title} Jewellers & Sons"
+            ]
+        elif any(k in st_lower for k in ["dent", "clinic", "health", "doctor", "hospital", "care"]):
+            synthetic_targets = [
+                f"{clean_q_title} Health Center {loc_tag}",
+                f"{loc_tag} {clean_q_title} Specialist Clinic",
+                f"Apex {clean_q_title} & Dental Care",
+                f"{clean_q_title} Medical Group {loc_tag}",
+                f"Prime {clean_q_title} Care Practice"
+            ]
+        elif any(k in st_lower for k in ["bake", "cake", "food", "restaurant", "cafe", "dining", "hotel", "sweet"]):
+            synthetic_targets = [
+                f"{clean_q_title} Bakes & Sweets {loc_tag}",
+                f"{loc_tag} {clean_q_title} Bakery & Cafe",
+                f"Apex {clean_q_title} Restaurant & Dining",
+                f"{clean_q_title} Food Kitchen {loc_tag}",
+                f"Royal {clean_q_title} Bakes"
+            ]
+        else:
+            synthetic_targets = [
+                f"{clean_q_title} Store {loc_tag}",
+                f"{loc_tag} {clean_q_title} Showroom",
+                f"Apex {clean_q_title} Enterprises",
+                f"{clean_q_title} Hub {loc_tag}",
+                f"Prime {clean_q_title} Works"
+            ]
+
         for st in synthetic_targets[:target_limit]:
             extracted.append({
                 "name": st,
@@ -924,6 +952,7 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
     if seen_ids is None:
         seen_ids = set()
 
+    clean_q = re.sub(r'\bjwellery\b', 'jewellery', query, flags=re.IGNORECASE)
     clean_ind = str(industry or "").strip()
     if clean_ind.lower() in ["public", "n/a", "general", "none", "practice", "all", "other", "services"]:
         clean_ind = ""
@@ -932,7 +961,7 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
     loc_info = normalize_location_terms(raw_loc)
     primary_loc = loc_info["primary"]
     
-    search_term = re.sub(r'\s+', ' ', f"{query} {clean_ind} {primary_loc or raw_loc}".strip())
+    search_term = re.sub(r'\s+', ' ', f"{clean_q} {clean_ind} {primary_loc or raw_loc}".strip())
     
     # Use a copy of seen_ids for maps scrape so process_candidate doesn't drop candidates
     maps_seen = set(seen_ids)
