@@ -23,7 +23,9 @@ DISALLOWED_DOMAINS = {
     "google.com", "youtube.com", "github.com", "linkedin.com", "twitter.com", "x.com", 
     "reddit.com", "justdial.com", "sulekha.com", "indiamart.com", "tradeindia.com", 
     "yellowpages.com", "quikr.com", "magicbricks.com", "housing.com", "99acres.com", 
-    "facebook.com", "instagram.com", "tripadvisor.com", "yelp.com", "jd.com"
+    "facebook.com", "instagram.com", "tripadvisor.com", "yelp.com", "jd.com",
+    "blogspot.com", "blogspot.in", "wordpress.com", "tumblr.com", "medium.com", "wixsite.com",
+    "gouv.fr", "gov.in", "gov", "edu", "aefe.gouv.fr", "wikipedia.org", "ecolerenan.com"
 }
 IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".svg", ".css", ".js")
 
@@ -186,7 +188,7 @@ def _decode_bing_url(href: str) -> str:
             if rem > 0:
                 b64_str += "=" * (4 - rem)
             decoded = base64.b64decode(b64_str).decode('utf-8', errors='ignore')
-            if "linkedin.com" in decoded:
+            if decoded.startswith("http"):
                 return decoded
         except Exception:
             pass
@@ -490,14 +492,15 @@ BAD_NAME_KEYWORDS = [
     "document", "overview", "hiring", "jobs", "yellow pages", "indiamart", "justdial",
     "sulekha", "quikr", "tradeindia", "wikipedia", "popular", "famous", "leading",
     "showrooms in", "dealers in", "shops in", "stores in", "services in", "suppliers in",
-    "manufacturers in", "traders in", "wholesalers in", "distributors in", "near me"
+    "manufacturers in", "traders in", "wholesalers in", "distributors in", "near me",
+    "ecole", "école", "school", "college", "university", "lycee", "lycée", "présentation", 
+    "presentation", "list&details", "list & details", "blogspot"
 ]
 
 BAD_NAME_PATTERNS = [
     r'^\d+\+?\s+',                      # Starts with digits e.g. "20+", "10+", "50 "
-    r'^(popular|best|top|famous)\s+',   # Starts with "popular ", "best ", "top "
-    r'\b(showrooms?|dealers?|shops?|stores?|services?|suppliers?|manufacturers?|traders?)\s+in\b', # "Showrooms in Attur"
-    r'\bin\s+[a-zA-Z\s]+,\s*[a-zA-Z\s]+$' # Ends with ", Salem" style aggregate headings
+    r'^(popular|best|top|famous|leading)\s+',   # Starts with "popular ", "best ", "top "
+    r'\b(showrooms?|dealers?|suppliers?|manufacturers?|traders?)\s+in\b', # "Showrooms in Attur"
 ]
 
 
@@ -768,22 +771,92 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
     except Exception as e:
         print(f"Google Maps scrape exception: {e}")
 
-    # Fallback A: DuckDuckGo business search
+    # Fallback A: Playwright Bing Local Scraper (High precision for real local business targets)
+    if len(extracted) < target_limit:
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-accelerated-2d-canvas",
+                        "--no-first-run",
+                        "--no-zygote",
+                        "--disable-gpu"
+                    ]
+                )
+                context = browser.new_context(
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+                )
+                page = context.new_page()
+                bing_url = f"https://www.bing.com/search?q={quote_plus(search_term)}"
+                page.goto(bing_url, timeout=6000)
+                page.wait_for_timeout(600)
+
+                cards = page.locator("li.b_algo").all()
+                for c in cards:
+                    try:
+                        title_el = c.locator("h2 a").first
+                        cite_el = c.locator("cite").first
+                        snip_el = c.locator("p, div.b_caption p").first
+
+                        if title_el.count() == 0:
+                            continue
+
+                        raw_title = title_el.inner_text().strip()
+                        raw_href = title_el.get_attribute("href") or ""
+                        snippet = snip_el.inner_text().strip() if snip_el.count() > 0 else ""
+
+                        clean_url = _decode_bing_url(raw_href)
+                        dom = urlparse(clean_url).netloc.lower().replace("www.", "")
+
+                        raw_clean = re.sub(r'^[-\|\:\s]+', '', raw_title).strip()
+                        parts = [p.strip() for p in re.split(r'\s+[\-\|:]\s+', raw_clean) if p.strip()]
+                        title = parts[0] if parts else raw_clean
+
+                        if any(b in dom for b in DISALLOWED_DOMAINS):
+                            continue
+
+                        if is_bad_business_name(title) or title.lower() in seen_ids:
+                            continue
+
+                        seen_ids.add(title.lower())
+                        phone = parse_phone(snippet)
+
+                        extracted.append({
+                            "name": title,
+                            "website": clean_url,
+                            "phone": phone,
+                            "address": snippet[:60] if snippet else search_term
+                        })
+
+                        if len(extracted) >= needed_candidates:
+                            break
+                    except Exception:
+                        continue
+                browser.close()
+        except Exception as e:
+            print(f"Bing local business scrape notice: {e}")
+
+    # Fallback B: Region-constrained DuckDuckGo search
     if len(extracted) < target_limit and DDGS:
         try:
             with DDGS() as ddgs:
                 ddg_query = f"{search_term} business"
-                hits = list(ddgs.text(ddg_query, max_results=target_limit * 2))
+                region_code = "in-en" if any(w in search_term.lower() for w in ["attur", "salem", "chennai", "india", "tamil nadu", "mumbai", "delhi", "bengaluru", "hyderabad", "pune", "coimbatore"]) else "wt-wt"
+                hits = list(ddgs.text(ddg_query, region=region_code, max_results=target_limit * 2))
                 for h in hits:
                     raw_title = h.get("title", "")
-                    title = raw_title.split("-")[0].split("|")[0].strip()
+                    title = raw_title.split("-")[0].split("|")[0].split(":")[0].strip()
                     if not title or title.lower() in seen_ids or len(title) < 3 or is_bad_business_name(title):
                         continue
                     href = h.get("href", "")
-                    dom = urlparse(href).netloc.lower()
+                    dom = urlparse(href).netloc.lower().replace("www.", "")
                     if any(b in dom for b in DISALLOWED_DOMAINS) or "wikipedia" in dom:
                         continue
-                    
+
                     snippet = h.get("body", "")
                     phone = parse_phone(snippet)
                     extracted.append({
