@@ -18,7 +18,13 @@ except ImportError:
 
 EMAIL_REGEX = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 PHONE_REGEX = re.compile(r'(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})|(?:\+?91[-. ]?)?([6-9]\d{9})')
-DISALLOWED_DOMAINS = {"sentry.io", "wixpress.com", "w3.org", "schema.org", "domain.com", "example.com", "google.com", "youtube.com", "github.com", "linkedin.com", "twitter.com", "x.com", "reddit.com"}
+DISALLOWED_DOMAINS = {
+    "sentry.io", "wixpress.com", "w3.org", "schema.org", "domain.com", "example.com", 
+    "google.com", "youtube.com", "github.com", "linkedin.com", "twitter.com", "x.com", 
+    "reddit.com", "justdial.com", "sulekha.com", "indiamart.com", "tradeindia.com", 
+    "yellowpages.com", "quikr.com", "magicbricks.com", "housing.com", "99acres.com", 
+    "facebook.com", "instagram.com", "tripadvisor.com", "yelp.com", "jd.com"
+}
 IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".svg", ".css", ".js")
 
 
@@ -30,11 +36,12 @@ def clean_email(em: str) -> Optional[str]:
         return None
     try:
         dom = em.split("@")[1]
-        if dom in DISALLOWED_DOMAINS:
+        if any(b in dom for b in DISALLOWED_DOMAINS):
             return None
     except IndexError:
         return None
     return em
+
 
 
 def parse_emails(text: str) -> List[str]:
@@ -138,10 +145,7 @@ async def extract_contact_info(client: httpx.AsyncClient, site_url: str) -> Dict
 
 
 def _infer_fallback_email(name: str, website: str, company: str = "") -> Dict[str, str]:
-    """Generates a plausible professional corporate email address."""
-    clean_name = re.sub(r'[^a-zA-Z0-9\s]', '', name).strip()
-    parts = [p.lower() for p in clean_name.split() if p]
-
+    """Generates a plausible email address if domain is real, or returns empty string if no valid domain exists."""
     domain = ""
     if website and website.startswith("http"):
         parsed_dom = urlparse(website).netloc.lower().replace("www.", "")
@@ -150,12 +154,14 @@ def _infer_fallback_email(name: str, website: str, company: str = "") -> Dict[st
 
     if not domain and company:
         clean_company = re.sub(r'[^a-zA-Z0-9]', '', company.lower())
-        if clean_company:
+        if clean_company and not any(b in clean_company for b in ["justdial", "sulekha", "indiamart", "tradeindia"]):
             domain = f"{clean_company}.com"
 
     if not domain:
-        clean_first = parts[0] if parts else "contact"
-        domain = f"{clean_first}brand.com"
+        return {"email": "", "status": "Inferred"}
+
+    clean_name = re.sub(r'[^a-zA-Z0-9\s]', '', name).strip()
+    parts = [p.lower() for p in clean_name.split() if p]
 
     if len(parts) >= 2:
         return {"email": f"{parts[0]}.{parts[-1]}@{domain}", "status": "Inferred"}
@@ -163,6 +169,7 @@ def _infer_fallback_email(name: str, website: str, company: str = "") -> Dict[st
         return {"email": f"{parts[0]}@{domain}", "status": "Inferred"}
     
     return {"email": f"contact@{domain}", "status": "Inferred"}
+
 
 
 import base64
@@ -479,9 +486,18 @@ async def search_linkedin_intent(role: str, industry: str = "", location: str = 
 
 
 BAD_NAME_KEYWORDS = [
-    "list of", "top 10", "top 50", "directory", "pdf", "500 business", "catalogue", 
+    "list of", "top 10", "top 20", "top 50", "directory", "pdf", "500 business", "catalogue", 
     "document", "overview", "hiring", "jobs", "yellow pages", "indiamart", "justdial",
-    "sulekha", "quikr", "tradeindia", "wikipedia"
+    "sulekha", "quikr", "tradeindia", "wikipedia", "popular", "famous", "leading",
+    "showrooms in", "dealers in", "shops in", "stores in", "services in", "suppliers in",
+    "manufacturers in", "traders in", "wholesalers in", "distributors in", "near me"
+]
+
+BAD_NAME_PATTERNS = [
+    r'^\d+\+?\s+',                      # Starts with digits e.g. "20+", "10+", "50 "
+    r'^(popular|best|top|famous)\s+',   # Starts with "popular ", "best ", "top "
+    r'\b(showrooms?|dealers?|shops?|stores?|services?|suppliers?|manufacturers?|traders?)\s+in\b', # "Showrooms in Attur"
+    r'\bin\s+[a-zA-Z\s]+,\s*[a-zA-Z\s]+$' # Ends with ", Salem" style aggregate headings
 ]
 
 
@@ -489,7 +505,13 @@ def is_bad_business_name(name: str) -> bool:
     if not name or len(name.strip()) < 3:
         return True
     n_low = name.lower()
-    return any(bad in n_low for bad in BAD_NAME_KEYWORDS)
+    if any(bad in n_low for bad in BAD_NAME_KEYWORDS):
+        return True
+    for pat in BAD_NAME_PATTERNS:
+        if re.search(pat, n_low, re.IGNORECASE):
+            return True
+    return False
+
 
 
 # --- WEB & GOOGLE MAPS SCRAPER WITH PINCODE SUPPORT ---
@@ -642,7 +664,7 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
                 for art in articles:
                     try:
                         lines = [l.strip() for l in art.inner_text().split("\n") if l.strip()]
-                        if not lines or lines[0].lower() in seen_ids or len(lines[0]) < 2:
+                        if not lines or lines[0].lower() in seen_ids or len(lines[0]) < 2 or is_bad_business_name(lines[0]):
                             continue
 
                         name = lines[0]
@@ -755,7 +777,7 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
                 for h in hits:
                     raw_title = h.get("title", "")
                     title = raw_title.split("-")[0].split("|")[0].strip()
-                    if not title or title.lower() in seen_ids or len(title) < 3:
+                    if not title or title.lower() in seen_ids or len(title) < 3 or is_bad_business_name(title):
                         continue
                     href = h.get("href", "")
                     dom = urlparse(href).netloc.lower()
