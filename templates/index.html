@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ad Fuzionz | Lead Manager & Outreach Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red-primary: #dc2626;
+            --red-glow: #ef4444;
+            --red-dark: #991b1b;
+            --bg-main: #08080a;
+            --card-bg: rgba(18, 18, 22, 0.85);
+        }
+        body {
+            background-color: var(--bg-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #f4f4f5;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+        .frosted-glass {
+            background: rgba(15, 15, 20, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .frosted-glass:hover {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .glow-red {
+            box-shadow: 0 0 25px -5px rgba(220, 38, 38, 0.4);
+        }
+        .glow-red-sm {
+            box-shadow: 0 0 12px -2px rgba(239, 68, 68, 0.35);
+        }
+        .text-glow {
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #dc2626;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-red-600 selection:text-white">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 border-b border-red-900/30 frosted-glass bg-black/80">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2">
+            <!-- BRAND LOGO -->
+            <div class="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                <img src="/static/logo.png" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl shadow-lg border border-red-500/50 glow-red-sm object-cover flex-shrink-0" alt="Ad Fuzionz Logo" />
+                <div class="min-w-0">
+                    <div class="flex items-center space-x-1.5 sm:space-x-2">
+                        <span class="font-heading font-extrabold text-base sm:text-xl tracking-wider text-white truncate">AD <span class="text-red-500 text-glow">FUZIONZ</span></span>
+                        <span class="hidden md:inline-block px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase bg-red-600/20 text-red-400 border border-red-500/30 rounded-full">Outreach Leads</span>
+                    </div>
+                    <p id="brandDisplay" class="text-[10px] sm:text-xs text-zinc-400 font-medium truncate max-w-[130px] sm:max-w-none">Loading Brand Profile...</p>
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+                <button onclick="openProfileModal()" class="text-[11px] sm:text-xs font-medium px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 transition flex items-center space-x-1.5">
+                    <i data-lucide="sliders" class="w-3.5 h-3.5 text-red-400"></i>
+                    <span class="hidden sm:inline">Brand Settings</span>
+                    <span class="sm:hidden">Settings</span>
+                </button>
+                <button onclick="openCampaignModal()" id="btnCampaignTrigger" class="text-[11px] sm:text-xs font-bold px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-lg glow-red transition flex items-center space-x-1.5">
+                    <i data-lucide="send" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span>Dispatch (<span id="selectedCount">0</span>)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- METRICS BAR -->
+    <div class="border-b border-white/[0.06] bg-black/40 overflow-x-auto no-scrollbar">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex sm:grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-4 text-center min-w-max sm:min-w-0">
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">Total Saved</p>
+                <p id="m_total" class="text-base sm:text-lg font-extrabold text-white">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">LinkedIn</p>
+                <p id="m_linkedin" class="text-base sm:text-lg font-extrabold text-blue-400">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">Web & Maps</p>
+                <p id="m_web" class="text-base sm:text-lg font-extrabold text-red-400">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">Reddit Intent</p>
+                <p id="m_reddit" class="text-base sm:text-lg font-extrabold text-orange-400">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">X / Twitter</p>
+                <p id="m_x" class="text-base sm:text-lg font-extrabold text-sky-400">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">Verified Mails</p>
+                <p id="m_verified" class="text-base sm:text-lg font-extrabold text-emerald-400">0</p>
+            </div>
+            <div class="p-2 sm:p-2.5 min-w-[95px] sm:min-w-0 rounded-xl bg-zinc-900/40 border border-white/5 flex-1">
+                <p class="text-[10px] sm:text-[11px] font-semibold text-zinc-400 uppercase tracking-wider truncate">Ready Queue</p>
+                <p id="m_ready" class="text-base sm:text-lg font-extrabold text-purple-400">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN BODY -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 w-full space-y-4 sm:space-y-6">
+
+        <!-- DISCOVERY SEARCH CONTROL -->
+        <section class="frosted-glass rounded-2xl p-4 sm:p-6 border border-red-900/20 space-y-4 sm:space-y-5 shadow-2xl">
+            <!-- CHANNEL TABS -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3.5">
+                <div class="flex p-1 rounded-xl bg-black/60 border border-white/10 space-x-1 overflow-x-auto w-full sm:w-auto no-scrollbar">
+                    <button onclick="switchChannel('linkedin')" id="tab_linkedin" class="px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 bg-red-600 text-white shadow whitespace-nowrap flex-shrink-0">
+                        <i data-lucide="linkedin" class="w-3.5 h-3.5"></i>
+                        <span>LinkedIn X-Ray</span>
+                    </button>
+                    <button onclick="switchChannel('web')" id="tab_web" class="px-3 sm:px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        <span>Web & Google Maps</span>
+                    </button>
+                    <button onclick="switchChannel('reddit')" id="tab_reddit" class="px-3 sm:px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0">
+                        <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                        <span>Reddit Intent</span>
+                    </button>
+                    <button onclick="switchChannel('x')" id="tab_x" class="px-3 sm:px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0">
+                        <i data-lucide="twitter" class="w-3.5 h-3.5"></i>
+                        <span>X / Twitter</span>
+                    </button>
+                </div>
+                
+                <button onclick="loadVault()" id="btnVault" class="px-3.5 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold transition flex items-center justify-center space-x-2 text-zinc-200 w-full sm:w-auto">
+                    <i data-lucide="archive" class="w-3.5 h-3.5 text-red-400"></i>
+                    <span>Saved Lead Vault</span>
+                </button>
+            </div>
+
+            <!-- SEARCH CONTROLS -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end">
+                <div id="wrapQuery" class="md:col-span-4">
+                    <label id="lblSearch" class="block text-xs font-semibold text-zinc-300 mb-1.5">Target Role / Niche Keyword</label>
+                    <input type="text" id="inputQuery" placeholder="e.g. Marketing Director, E-commerce Founder" class="w-full bg-black/60 border border-white/10 focus:border-red-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition" />
+                </div>
+                <div id="wrapIndustry" class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1.5">Industry / Sector</label>
+                    <input type="text" id="inputIndustry" placeholder="e.g. SaaS, Fintech, Healthcare" class="w-full bg-black/60 border border-white/10 focus:border-red-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition" />
+                </div>
+                <div id="wrapLocation" class="md:col-span-3 relative">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-zinc-300">Location / City</label>
+                        <button type="button" onclick="useCurrentLocation()" id="btnGeoLocate" title="Auto-detect current location via GPS" class="text-[10px] text-red-400 hover:text-red-300 flex items-center space-x-1 font-semibold bg-red-950/40 border border-red-800/40 px-2 py-0.5 rounded-lg transition hover:bg-red-900/40">
+                            <i data-lucide="navigation" class="w-3 h-3 text-red-400"></i>
+                            <span>GPS Auto</span>
+                        </button>
+                    </div>
+                    <input type="text" id="inputLocation" oninput="handleLocationTyping(this.value)" placeholder="e.g. New York, Salem, Chennai" class="w-full bg-black/60 border border-white/10 focus:border-red-500 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none transition" />
+                    <div id="geoDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"></div>
+                </div>
+                <div class="md:col-span-2 flex space-x-2">
+                    <div class="w-20">
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5 text-center">Limit</label>
+                        <input type="number" id="inputLimit" value="8" min="1" max="25" class="w-full bg-black/60 border border-white/10 rounded-xl px-2 py-2.5 text-xs sm:text-sm text-center font-bold text-white focus:outline-none focus:border-red-500" />
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold text-transparent mb-1.5 hidden sm:block">Action</label>
+                        <button onclick="scrapeLeads()" id="btnScrape" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold text-xs sm:text-sm rounded-xl py-2.5 transition shadow-lg glow-red flex items-center justify-center space-x-1.5">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span>Scrape</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOOLBAR & VIEW TOGGLES -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div class="flex items-center justify-between sm:justify-start space-x-3">
+                <div class="flex items-center space-x-2">
+                    <span id="pipelineHeading" class="text-xs font-mono font-bold text-red-400 uppercase tracking-widest">STREAM</span>
+                    <span id="countBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-300 font-semibold">0 leads</span>
+                </div>
+                
+                <div class="flex items-center space-x-1 bg-zinc-900/60 p-1 rounded-lg border border-white/5">
+                    <button onclick="setViewMode('grid')" id="btnViewGrid" class="p-1.5 rounded text-red-400 bg-white/10" title="Grid View">
+                        <i data-lucide="grid" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="setViewMode('table')" id="btnViewTable" class="p-1.5 rounded text-zinc-400 hover:text-white" title="Table View">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+                <button onclick="toggleSelectAll()" id="btnSelectAll" class="text-xs font-medium px-3 py-2 rounded-xl border border-white/10 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 transition whitespace-nowrap">Select All</button>
+                <button onclick="saveSelectedLeads()" id="btnSaveSelected" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-red-950/70 text-red-300 border border-red-800/60 hover:bg-red-900/80 transition flex items-center space-x-1.5 whitespace-nowrap">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5 text-red-400"></i>
+                    <span>Save Selected to Vault</span>
+                </button>
+                <button onclick="deleteSelectedLeads()" id="btnDeleteSelected" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-zinc-900 text-red-400 border border-red-900/40 hover:bg-red-950/50 transition flex items-center space-x-1.5 whitespace-nowrap hidden">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
+                    <span>Delete Selected</span>
+                </button>
+                <button onclick="generateAllPitches()" id="btnGenAll" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-purple-950/60 text-purple-300 border border-purple-800/50 hover:bg-purple-900/60 transition flex items-center space-x-1.5 whitespace-nowrap">
+                    <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                    <span>Batch AI Pitch</span>
+                </button>
+                <button onclick="exportCSV()" class="text-xs font-medium px-3.5 py-2 rounded-xl border border-white/10 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 transition flex items-center space-x-1.5 whitespace-nowrap">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Export CSV</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- LEADS CONTAINER -->
+        <section id="leadsContainer" class="space-y-4"></section>
+    </main>
+
+    <!-- BRAND PROFILE MODAL -->
+    <div id="modalProfile" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-red-900/40 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-heading font-bold text-lg text-white flex items-center space-x-2">
+                    <i data-lucide="sliders" class="w-5 h-5 text-red-500"></i>
+                    <span>Ad Fuzionz Brand Settings</span>
+                </h3>
+                <button onclick="closeProfileModal()" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-zinc-400 mb-1 font-semibold">Agency / Business Name</label>
+                    <input type="text" id="profCompany" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-zinc-400 mb-1 font-semibold">Founder / Sender Name</label>
+                        <input type="text" id="profFounder" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-zinc-400 mb-1 font-semibold">Website URL</label>
+                        <input type="text" id="profWebsite" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-zinc-400 mb-1 font-semibold">Booking / Calendar URL</label>
+                    <input type="text" id="profBooking" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white" />
+                </div>
+                <div>
+                    <label class="block text-zinc-400 mb-1 font-semibold">Primary Core Offer</label>
+                    <textarea id="profOffer" rows="2" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white"></textarea>
+                </div>
+                <div>
+                    <label class="block text-zinc-400 mb-1 font-semibold">Default Pitch Genre / Style</label>
+                    <select id="profGenre" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-red-500">
+                        <option value="Competitor Case Study & Authority">Competitor Case Study & Authority (Proven Proof Pitch)</option>
+                        <option value="Engaging & Direct">Engaging & Direct (High-Converting Strategy)</option>
+                        <option value="Conversational & Friendly">Conversational & Friendly</option>
+                        <option value="Pain Point & Solution">Pain Point & Solution</option>
+                        <option value="Short & Punchy">Short & Punchy</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
+                <button onclick="closeProfileModal()" class="text-xs px-4 py-2 rounded-xl border border-white/10 text-zinc-300">Cancel</button>
+                <button onclick="saveBrandProfile()" class="text-xs font-bold px-5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white glow-red-sm">Save Brand Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAMPAIGN DISPATCH MODAL -->
+    <div id="modalCampaign" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-zinc-950 border border-red-900/40 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-heading font-bold text-lg text-white flex items-center space-x-2">
+                    <i data-lucide="send" class="w-5 h-5 text-red-500"></i>
+                    <span>SMTP Campaign Dispatcher</span>
+                </h3>
+                <button onclick="closeCampaignModal()" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div class="p-3 rounded-xl bg-zinc-900/80 border border-white/10 flex justify-between items-center">
+                    <div>
+                        <p class="text-zinc-400">Target Deliverable Email Leads</p>
+                        <p id="modalTargetCount" class="text-base font-extrabold text-white">0 Selected</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-zinc-400">Pacing Delay</p>
+                        <p id="modalDuration" class="text-base font-extrabold text-red-400">0 mins</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-zinc-400 mb-1.5 font-semibold">Safety Delay Profile</label>
+                    <select id="selSafety" onchange="updateCampaignEstimate()" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2 text-white">
+                        <option value="standard">Standard (2 - 4 mins delay per lead)</option>
+                        <option value="conservative">Conservative (3 - 5 mins delay per lead)</option>
+                        <option value="aggressive">Aggressive (45 - 90 secs delay per lead)</option>
+                    </select>
+                </div>
+
+                <!-- LIVE PROGRESS -->
+                <div id="wrapProgress" class="hidden space-y-2 p-3 rounded-xl bg-black border border-red-900/40">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span id="txtProgStatus" class="text-red-400">Sending...</span>
+                        <span id="txtProgCount" class="text-white">0 / 0</span>
+                    </div>
+                    <div class="w-full bg-zinc-900 rounded-full h-2 overflow-hidden">
+                        <div id="barProgress" class="bg-red-600 h-2 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div id="boxLogs" class="h-24 overflow-y-auto font-mono text-[10px] text-zinc-400 bg-zinc-950 p-2 rounded border border-white/5 space-y-1"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
+                <button onclick="closeCampaignModal()" class="text-xs px-4 py-2 rounded-xl border border-white/10 text-zinc-300">Close</button>
+                <button onclick="startCampaign()" id="btnLaunchCampaign" class="text-xs font-bold px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white glow-red-sm">Launch Email Dispatch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        lucide.createIcons();
+        
+        let activeChannel = "linkedin";
+        let viewMode = "grid";
+        let selectedLeadIds = new Set();
+        const state = { linkedin: [], web: [], reddit: [], x: [], vault: [] };
+
+        async function init() {
+            try {
+                const res = await fetch('/api/profile');
+                const p = await res.json();
+                document.getElementById('brandDisplay').innerText = `${p.company_name} • ${p.founder_name}`;
+                document.getElementById('profCompany').value = p.company_name;
+                document.getElementById('profFounder').value = p.founder_name;
+                document.getElementById('profWebsite').value = p.website_url;
+                document.getElementById('profBooking').value = p.booking_url;
+                document.getElementById('profOffer').value = p.primary_offer;
+                if (document.getElementById('profGenre')) document.getElementById('profGenre').value = p.pitch_genre || 'Engaging & Direct';
+            } catch(e) {}
+            refreshMetrics();
+            switchChannel('linkedin');
+        }
+        init();
+
+        async function refreshMetrics() {
+            try {
+                const r = await fetch('/api/leads/metrics');
+                const m = await r.json();
+                document.getElementById('m_total').innerText = m.total;
+                document.getElementById('m_linkedin').innerText = m.linkedin;
+                document.getElementById('m_web').innerText = m.web;
+                document.getElementById('m_reddit').innerText = m.reddit;
+                document.getElementById('m_x').innerText = m.x;
+                document.getElementById('m_verified').innerText = m.verified_count;
+                document.getElementById('m_ready').innerText = m.emails_ready;
+            } catch(e) {}
+        }
+
+        function switchChannel(ch) {
+            activeChannel = ch;
+            ['linkedin', 'web', 'reddit', 'x'].forEach(c => {
+                const btn = document.getElementById(`tab_${c}`);
+                if (c === ch) {
+                    btn.className = "px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-2 bg-red-600 text-white shadow";
+                } else {
+                    btn.className = "px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center space-x-2";
+                }
+            });
+
+            document.getElementById('btnVault').className = "px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold transition flex items-center space-x-2 text-zinc-200";
+            
+            // Adjust input labels & visibility
+            const lbl = document.getElementById('lblSearch');
+            const inputQ = document.getElementById('inputQuery');
+            const wrapLoc = document.getElementById('wrapLocation');
+
+            if (ch === 'linkedin') {
+                lbl.innerText = "Target Role / Job Title";
+                inputQ.placeholder = "e.g. Marketing Director, E-commerce Founder, Agency Owner";
+                wrapLoc.style.display = 'block';
+            } else if (ch === 'web') {
+                lbl.innerText = "Business Niche / Category";
+                inputQ.placeholder = "e.g. Dental Clinics, Real Estate, Bakeries";
+                wrapLoc.style.display = 'block';
+            } else if (ch === 'reddit') {
+                lbl.innerText = "Hiring / Intent Keyword";
+                inputQ.placeholder = "e.g. need video editor, looking for ad agency";
+                wrapLoc.style.display = 'none';
+            } else if (ch === 'x') {
+                lbl.innerText = "Social Intent Search";
+                inputQ.placeholder = "e.g. hiring video editor, looking for media buyer";
+                wrapLoc.style.display = 'none';
+            }
+
+            const btnDel = document.getElementById('btnDeleteSelected');
+            if (btnDel) btnDel.classList.add('hidden');
+
+            document.getElementById('pipelineHeading').innerText = `${ch.toUpperCase()} LEADS`;
+            selectedLeadIds.clear();
+            renderLeads();
+        }
+
+        async function loadVault() {
+            activeChannel = "vault";
+            ['linkedin', 'web', 'reddit', 'x'].forEach(c => {
+                const tab = document.getElementById(`tab_${c}`);
+                if (tab) tab.className = "px-3 sm:px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0";
+            });
+            const btnVault = document.getElementById('btnVault');
+            if (btnVault) {
+                btnVault.className = "px-3.5 py-2 rounded-xl border border-red-500 bg-red-950/60 text-xs font-bold transition flex items-center justify-center space-x-2 text-white glow-red-sm w-full sm:w-auto";
+            }
+            document.getElementById('pipelineHeading').innerText = "SAVED VAULT LEADS";
+
+            const btnDel = document.getElementById('btnDeleteSelected');
+            if (btnDel) btnDel.classList.remove('hidden');
+
+            try {
+                const res = await fetch('/api/leads/saved/all');
+                const data = await res.json();
+                state.vault = data.leads || [];
+                selectedLeadIds.clear();
+                renderLeads();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+
+        async function scrapeLeads() {
+            const query = document.getElementById('inputQuery').value.trim();
+            const industry = document.getElementById('inputIndustry') ? document.getElementById('inputIndustry').value.trim() : "";
+            const location = document.getElementById('inputLocation').value.trim();
+            const limit = parseInt(document.getElementById('inputLimit').value) || 8;
+            const btn = document.getElementById('btnScrape');
+
+            if (!query) {
+                alert("Please enter a query or target role.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Scraping...</span>`;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/leads/discover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel: activeChannel, query, industry, location, limit })
+                });
+                const data = await res.json();
+                state[activeChannel] = data.leads || [];
+                renderLeads();
+            } catch(e) {
+                alert("Scrape error occurred.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>Scrape</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('btnViewGrid').className = mode === 'grid' ? "p-1.5 rounded text-red-400 bg-white/10" : "p-1.5 rounded text-zinc-400 hover:text-white";
+            document.getElementById('btnViewTable').className = mode === 'table' ? "p-1.5 rounded text-red-400 bg-white/10" : "p-1.5 rounded text-zinc-400 hover:text-white";
+            renderLeads();
+        }
+
+        function getCurrentLeads() {
+            return activeChannel === 'vault' ? state.vault : (state[activeChannel] || []);
+        }
+
+        function toggleSelectLead(id) {
+            if (selectedLeadIds.has(id)) {
+                selectedLeadIds.delete(id);
+            } else {
+                selectedLeadIds.add(id);
+            }
+            document.getElementById('selectedCount').innerText = selectedLeadIds.size;
+        }
+
+        function toggleSelectAll() {
+            const leads = getCurrentLeads();
+            if (selectedLeadIds.size >= leads.length) {
+                selectedLeadIds.clear();
+            } else {
+                leads.forEach(l => selectedLeadIds.add(l.id));
+            }
+            document.getElementById('selectedCount').innerText = selectedLeadIds.size;
+            renderLeads();
+        }
+
+        function renderLeads() {
+            const leads = getCurrentLeads();
+            const container = document.getElementById('leadsContainer');
+            document.getElementById('countBadge').innerText = `${leads.length} leads`;
+            document.getElementById('selectedCount').innerText = selectedLeadIds.size;
+
+            if (!leads || leads.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 frosted-glass rounded-2xl border border-white/5 space-y-3">
+                        <i data-lucide="search-x" class="w-10 h-10 text-zinc-600 mx-auto"></i>
+                        <p class="text-sm font-semibold text-zinc-400">No leads discovered yet in this channel stream.</p>
+                        <p class="text-xs text-zinc-600">Enter a query above and click "Scrape Leads" to start finding prospects.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            if (viewMode === 'grid') {
+                container.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
+                container.innerHTML = leads.map(l => renderCard(l)).join('');
+            } else {
+                container.className = "block overflow-x-auto";
+                container.innerHTML = renderTable(leads);
+            }
+            lucide.createIcons();
+        }
+
+        function renderCard(l) {
+            const isChecked = selectedLeadIds.has(l.id);
+            const statusBadge = l.email_status === 'Verified' 
+                ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800/60 whitespace-nowrap shrink-0">Verified Mail</span>`
+                : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800/60 whitespace-nowrap shrink-0">Inferred Mail</span>`;
+
+            return `
+                <div class="frosted-glass rounded-2xl p-5 space-y-4 border ${isChecked ? 'border-red-500 bg-red-950/10' : 'border-white/10'} transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelectLead('${l.id}')" class="mt-1 accent-red-600 w-4 h-4 rounded cursor-pointer" />
+                            <div>
+                                <h4 class="font-heading font-bold text-base text-white flex items-center space-x-2">
+                                    <span>${escapeHtml(l.name)}</span>
+                                </h4>
+                                <p class="text-xs text-zinc-400 mt-0.5 line-clamp-1">${escapeHtml(l.headline || '')}</p>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    ${l.industry ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-950/80 text-purple-300 border border-purple-800/60 flex items-center space-x-1"><i data-lucide="briefcase" class="w-2.5 h-2.5"></i><span>${escapeHtml(l.industry)}</span></span>` : ''}
+                                    ${l.address ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(l.name + ' ' + (l.address || ''))}" target="_blank" title="Click to view location on Google Maps" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800/90 hover:bg-red-950/80 text-zinc-300 hover:text-white border border-white/10 hover:border-red-500/50 flex items-center space-x-1 transition cursor-pointer"><i data-lucide="map-pin" class="w-2.5 h-2.5 text-red-400"></i><span>${escapeHtml(l.address)}</span></a>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+
+                    <!-- CONTACT INFORMATION -->
+                    <div class="grid grid-cols-2 gap-2 text-xs bg-black/40 p-3 rounded-xl border border-white/5">
+                        <div class="space-y-1">
+                            <span class="text-[10px] text-zinc-500 font-semibold uppercase">Email Target</span>
+                            <p class="font-mono text-zinc-200 truncate cursor-pointer hover:text-red-400" onclick="navigator.clipboard.writeText('${l.primary_email}')" title="Click to copy email">
+                                ${escapeHtml(l.primary_email || 'N/A')}
+                            </p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[10px] text-zinc-500 font-semibold uppercase">Phone / WhatsApp</span>
+                            <div>
+                                ${l.phone && l.phone !== 'N/A' 
+                                    ? `<a href="javascript:void(0)" onclick="openWhatsAppOutreach('${l.id}')" class="text-emerald-400 hover:underline flex items-center space-x-1 font-mono">
+                                        <i data-lucide="phone-call" class="w-3 h-3"></i><span>${l.phone}</span>
+                                       </a>`
+                                    : `<span class="text-zinc-500">N/A</span>`}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PITCH EDIT -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-black/40 border border-white/5 p-2 rounded-xl text-xs">
+                            <span class="text-[11px] font-semibold text-zinc-400 flex items-center space-x-1">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i>
+                                <span>Pitch Style / Genre:</span>
+                            </span>
+                            <select id="genre_${l.id}" onchange="updateLeadGenre('${l.id}', this.value)" class="bg-zinc-900 border border-white/15 rounded-lg px-2 py-1 text-[11px] text-purple-300 font-medium focus:outline-none focus:border-purple-500 cursor-pointer">
+                                <option value="Competitor Case Study & Authority" ${ (l.pitch_genre || (state.profile && state.profile.pitch_genre) || 'Competitor Case Study & Authority') === 'Competitor Case Study & Authority' ? 'selected' : '' }>Competitor Case Study & Authority</option>
+                                <option value="Engaging & Direct" ${ (l.pitch_genre || (state.profile && state.profile.pitch_genre)) === 'Engaging & Direct' ? 'selected' : '' }>Engaging & Direct</option>
+                                <option value="Conversational & Friendly" ${ (l.pitch_genre || (state.profile && state.profile.pitch_genre)) === 'Conversational & Friendly' ? 'selected' : '' }>Conversational & Friendly</option>
+                                <option value="Pain Point & Solution" ${ (l.pitch_genre || (state.profile && state.profile.pitch_genre)) === 'Pain Point & Solution' ? 'selected' : '' }>Pain Point & Solution</option>
+                                <option value="Short & Punchy" ${ (l.pitch_genre || (state.profile && state.profile.pitch_genre)) === 'Short & Punchy' ? 'selected' : '' }>Short & Punchy</option>
+                            </select>
+                        </div>
+
+                        <!-- EMAIL PITCH BLOCK -->
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-[11px] font-semibold text-red-400 flex items-center space-x-1">
+                                    <i data-lucide="mail" class="w-3.5 h-3.5"></i><span>Outreach Email & Pitch Copy</span>
+                                </span>
+                                <button id="btn_gen_email_${l.id}" onclick="generateSingleEmailPitch('${l.id}')" class="text-[11px] text-purple-300 hover:text-white font-semibold flex items-center space-x-1 bg-purple-950/80 border border-purple-800/60 px-2 py-0.5 rounded-lg transition hover:bg-purple-900">
+                                    <i data-lucide="wand-2" class="w-3 h-3 text-purple-400"></i><span>AI Generate Email</span>
+                                </button>
+                            </div>
+                            <input type="text" id="subj_${l.id}" value="${escapeHtml(l.subject || '')}" placeholder="Email Subject" class="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-red-500" />
+                            <textarea id="body_${l.id}" rows="2.5" placeholder="Email pitch copy..." class="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-xs text-zinc-200 focus:outline-none focus:border-red-500">${escapeHtml(l.body || '')}</textarea>
+                        </div>
+                        
+                        ${ (l.channel_type === 'linkedin' || activeChannel === 'linkedin') ? `
+                        <!-- AI GENERATED LINKEDIN PITCH BLOCK -->
+                        <div class="space-y-1.5 pt-2 border-t border-white/5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-[11px] font-semibold text-blue-400 flex items-center space-x-1">
+                                    <i data-lucide="linkedin" class="w-3.5 h-3.5"></i><span>LinkedIn InMail / DM Pitch</span>
+                                </span>
+                                <button id="btn_gen_li_${l.id}" onclick="generateSingleLinkedInPitch('${l.id}')" class="text-[11px] text-blue-300 hover:text-white font-semibold flex items-center space-x-1 bg-blue-950/80 border border-blue-800/60 px-2 py-0.5 rounded-lg transition hover:bg-blue-900">
+                                    <i data-lucide="wand-2" class="w-3 h-3 text-blue-400"></i><span>AI Generate LinkedIn</span>
+                                </button>
+                            </div>
+                            <textarea id="li_pitch_${l.id}" rows="2.5" placeholder="LinkedIn message pitch generated by AI..." class="w-full bg-black/60 border border-blue-900/40 rounded-lg p-2.5 text-xs text-blue-200 focus:outline-none focus:border-blue-500">${escapeHtml(l.linkedin_pitch || '')}</textarea>
+                        </div>
+                        ` : (l.channel_type === 'reddit' || l.channel_type === 'x' || activeChannel === 'reddit' || activeChannel === 'x') ? `
+                        <!-- AI GENERATED SOCIAL DM BLOCK -->
+                        <div class="space-y-1.5 pt-2 border-t border-white/5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-[11px] font-semibold text-pink-400 flex items-center space-x-1">
+                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i><span>Social DM Pitch (Reddit / X)</span>
+                                </span>
+                                <button id="btn_gen_social_${l.id}" onclick="generateSingleSocialPitch('${l.id}')" class="text-[11px] text-pink-300 hover:text-white font-semibold flex items-center space-x-1 bg-pink-950/80 border border-pink-800/60 px-2 py-0.5 rounded-lg transition hover:bg-pink-900">
+                                    <i data-lucide="wand-2" class="w-3 h-3 text-pink-400"></i><span>AI Generate Social DM</span>
+                                </button>
+                            </div>
+                            <textarea id="social_pitch_${l.id}" rows="2.5" placeholder="Social DM message script generated by AI..." class="w-full bg-black/60 border border-pink-900/40 rounded-lg p-2.5 text-xs text-pink-200 focus:outline-none focus:border-pink-500">${escapeHtml(l.social_pitch || '')}</textarea>
+                        </div>
+                        ` : `
+                        <!-- AI GENERATED WHATSAPP SCRIPT BLOCK -->
+                        <div class="space-y-1.5 pt-2 border-t border-white/5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-[11px] font-semibold text-emerald-400 flex items-center space-x-1">
+                                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i><span>WhatsApp Script Copy (AI Generated)</span>
+                                </span>
+                                <button id="btn_gen_wa_${l.id}" onclick="generateSingleWhatsAppPitch('${l.id}')" class="text-[11px] text-emerald-300 hover:text-white font-semibold flex items-center space-x-1 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded-lg transition hover:bg-emerald-900">
+                                    <i data-lucide="wand-2" class="w-3 h-3 text-emerald-400"></i><span>AI Generate WhatsApp</span>
+                                </button>
+                            </div>
+                            <textarea id="wa_pitch_${l.id}" rows="2.5" placeholder="WhatsApp message script generated by AI..." class="w-full bg-black/60 border border-emerald-900/40 rounded-lg p-2.5 text-xs text-emerald-200 focus:outline-none focus:border-emerald-500">${escapeHtml(l.whatsapp_pitch || '')}</textarea>
+                        </div>
+                        `}
+                    </div>
+
+                    <!-- 1-CLICK DIRECT OUTREACH ACTION BUTTONS -->
+                    <div class="space-y-2 pt-1 border-t border-white/5">
+                        <span class="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">1-Click Direct Outreach</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${ (l.channel_type === 'linkedin' || activeChannel === 'linkedin') ? `
+                            <button onclick="openLinkedInOutreach('${l.id}')" title="Open LinkedIn & copy pitch" class="py-2 px-2 rounded-xl bg-blue-950/80 hover:bg-blue-900 text-blue-300 border border-blue-700/60 font-semibold text-xs flex items-center justify-center space-x-1.5 transition">
+                                <i data-lucide="linkedin" class="w-3.5 h-3.5 text-blue-400"></i>
+                                <span>LinkedIn InMail</span>
+                            </button>
+                            ` : (l.channel_type === 'reddit' || l.channel_type === 'x' || activeChannel === 'reddit' || activeChannel === 'x') ? `
+                            <button onclick="openSocialDMOutreach('${l.id}')" title="Open Social Profile & copy pitch" class="py-2 px-2 rounded-xl bg-pink-950/80 hover:bg-pink-900 text-pink-300 border border-pink-700/60 font-semibold text-xs flex items-center justify-center space-x-1.5 transition">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5 text-pink-400"></i>
+                                <span>Social DM</span>
+                            </button>
+                            ` : `
+                            <button onclick="openWhatsAppOutreach('${l.id}')" title="Open WhatsApp with pre-filled pitch" class="py-2 px-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 font-semibold text-xs flex items-center justify-center space-x-1.5 transition">
+                                <i data-lucide="message-square" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                <span>WhatsApp</span>
+                            </button>
+                            `}
+                            <button onclick="openMailOutreach('${l.id}')" title="Open Mail app with pre-filled pitch" class="py-2 px-2 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700/60 font-semibold text-xs flex items-center justify-center space-x-1.5 transition">
+                                <i data-lucide="mail" class="w-3.5 h-3.5 text-red-400"></i>
+                                <span>Mail Pitch</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FOOTER ACTIONS -->
+                    <div class="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                        <a href="${l.website}" target="_blank" class="text-zinc-400 hover:text-white flex items-center space-x-1">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i><span>Open Target Profile</span>
+                        </a>
+                        <div class="flex space-x-2">
+                            <button onclick="saveLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-red-600/20 text-red-300 border border-red-500/30 hover:bg-red-600/30 font-medium text-xs flex items-center space-x-1 transition">
+                                <i data-lucide="bookmark" class="w-3.5 h-3.5 text-red-400"></i>
+                                <span>${l.is_saved ? 'Saved' : 'Save to Vault'}</span>
+                            </button>
+                            <button onclick="deleteLeadFromVault('${l.id}')" title="Delete lead" class="px-3 py-1.5 rounded-lg bg-zinc-900/90 text-red-400 hover:bg-red-950/80 border border-white/10 hover:border-red-800/60 font-medium text-xs flex items-center space-x-1 transition">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTable(leads) {
+            return `
+                <div class="frosted-glass rounded-2xl border border-white/10 overflow-hidden">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-black/60 border-b border-white/10 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="p-3 w-10 text-center"><input type="checkbox" onchange="toggleSelectAll()" class="accent-red-600 w-3.5 h-3.5" /></th>
+                                <th class="p-3">Name / Role</th>
+                                <th class="p-3">Industry & Location</th>
+                                <th class="p-3">Email & Status</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Channel</th>
+                                <th class="p-3 text-right">Outreach Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            ${leads.map(l => `
+                                <tr class="hover:bg-white/[0.02]">
+                                    <td class="p-3 text-center">
+                                        <input type="checkbox" ${selectedLeadIds.has(l.id) ? 'checked' : ''} onchange="toggleSelectLead('${l.id}')" class="accent-red-600 w-3.5 h-3.5" />
+                                    </td>
+                                    <td class="p-3">
+                                        <p class="font-bold text-white">${escapeHtml(l.name)}</p>
+                                        <p class="text-[11px] text-zinc-400 line-clamp-1">${escapeHtml(l.headline || '')}</p>
+                                    </td>
+                                    <td class="p-3">
+                                        <p class="font-semibold text-purple-300 text-[11px]">${escapeHtml(l.industry || 'N/A')}</p>
+                                        <a href="https://www.google.com/maps/search/${encodeURIComponent(l.name + ' ' + (l.address || ''))}" target="_blank" title="Click to view location on Google Maps" class="text-[10px] text-zinc-400 hover:text-red-400 flex items-center space-x-1 mt-0.5 transition cursor-pointer"><i data-lucide="map-pin" class="w-2.5 h-2.5 text-red-400"></i><span>${escapeHtml(l.address || 'Global')}</span></a>
+                                    </td>
+                                    <td class="p-3">
+                                        <p class="font-mono text-zinc-200">${escapeHtml(l.primary_email || 'N/A')}</p>
+                                        <span class="text-[9px] font-bold uppercase ${l.email_status === 'Verified' ? 'text-emerald-400' : 'text-amber-400'}">${l.email_status || 'Inferred'}</span>
+                                    </td>
+                                    <td class="p-3 font-mono text-zinc-300">${escapeHtml(l.phone || 'N/A')}</td>
+                                    <td class="p-3 font-semibold uppercase text-red-400 text-[10px]">${l.channel_type}</td>
+                                    <td class="p-3 text-right">
+                                        <div class="flex items-center justify-end space-x-1.5">
+                                            <button onclick="openLinkedInOutreach('${l.id}')" title="LinkedIn Outreach & Copy Pitch" class="p-1.5 rounded bg-blue-950/80 text-blue-400 border border-blue-800/60 hover:bg-blue-900">
+                                                <i data-lucide="linkedin" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="openWhatsAppOutreach('${l.id}')" title="WhatsApp Pre-filled Chat" class="p-1.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 hover:bg-emerald-900">
+                                                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="openMailOutreach('${l.id}')" title="Send Email Pitch" class="p-1.5 rounded bg-red-950/80 text-red-400 border border-red-800/60 hover:bg-red-900">
+                                                <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="generateSinglePitch('${l.id}')" title="AI Generate Pitch" class="p-1.5 rounded bg-purple-950/80 text-purple-400 border border-purple-800/60 hover:bg-purple-900">
+                                                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="saveLead('${l.id}')" title="Save to Vault" class="p-1.5 rounded bg-zinc-800 text-zinc-300 hover:text-white border border-white/10">
+                                                <i data-lucide="bookmark" class="w-3.5 h-3.5 text-red-400"></i>
+                                            </button>
+                                            <button onclick="deleteLeadFromVault('${l.id}')" title="Delete lead" class="p-1.5 rounded bg-zinc-900 text-red-400 hover:bg-red-950/80 border border-white/10 hover:border-red-800/60">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+
+        async function generateSingleEmailPitch(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const btn = document.getElementById(`btn_gen_email_${id}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span>Generating...</span>`;
+                lucide.createIcons();
+            }
+
+            const genreEl = document.getElementById(`genre_${id}`);
+            const genre = genreEl ? genreEl.value : (l.pitch_genre || (state.profile && state.profile.pitch_genre) || 'Engaging & Direct');
+
+            try {
+                const res = await fetch('/api/pitch/single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: l.name,
+                        channel_type: l.channel_type,
+                        headline: l.headline || l.address,
+                        user_notes: l.user_notes,
+                        pitch_type: 'email',
+                        pitch_genre: genre
+                    })
+                });
+                const pitch = await res.json();
+                if (pitch.subject) l.subject = pitch.subject;
+                if (pitch.body) l.body = pitch.body;
+
+                const subjEl = document.getElementById(`subj_${id}`);
+                const bodyEl = document.getElementById(`body_${id}`);
+                if (subjEl) subjEl.value = l.subject;
+                if (bodyEl) bodyEl.value = l.body;
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="wand-2" class="w-3 h-3 text-purple-400"></i><span>AI Generate Email</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function generateSingleWhatsAppPitch(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const btn = document.getElementById(`btn_gen_wa_${id}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span>Generating...</span>`;
+                lucide.createIcons();
+            }
+
+            const genreEl = document.getElementById(`genre_${id}`);
+            const genre = genreEl ? genreEl.value : (l.pitch_genre || (state.profile && state.profile.pitch_genre) || 'Engaging & Direct');
+
+            try {
+                const res = await fetch('/api/pitch/single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: l.name,
+                        channel_type: l.channel_type,
+                        headline: l.headline || l.address,
+                        user_notes: l.user_notes,
+                        pitch_type: 'whatsapp',
+                        pitch_genre: genre
+                    })
+                });
+                const pitch = await res.json();
+                if (pitch.whatsapp_pitch) l.whatsapp_pitch = pitch.whatsapp_pitch;
+
+                const waEl = document.getElementById(`wa_pitch_${id}`);
+                if (waEl) waEl.value = l.whatsapp_pitch;
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="wand-2" class="w-3 h-3 text-emerald-400"></i><span>AI Generate WhatsApp</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function generateSingleLinkedInPitch(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const btn = document.getElementById(`btn_gen_li_${id}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span>Generating...</span>`;
+                lucide.createIcons();
+            }
+
+            const genreEl = document.getElementById(`genre_${id}`);
+            const genre = genreEl ? genreEl.value : (l.pitch_genre || (state.profile && state.profile.pitch_genre) || 'Competitor Case Study & Authority');
+
+            try {
+                const res = await fetch('/api/pitch/single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: l.name,
+                        channel_type: l.channel_type,
+                        headline: l.headline || l.address,
+                        user_notes: l.user_notes,
+                        pitch_type: 'linkedin',
+                        pitch_genre: genre
+                    })
+                });
+                const pitch = await res.json();
+                l.linkedin_pitch = pitch.linkedin_pitch || pitch.body || '';
+
+                const liEl = document.getElementById(`li_pitch_${id}`);
+                if (liEl) liEl.value = l.linkedin_pitch;
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="wand-2" class="w-3 h-3 text-blue-400"></i><span>AI Generate LinkedIn</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function generateSingleSocialPitch(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const btn = document.getElementById(`btn_gen_social_${id}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span>Generating...</span>`;
+                lucide.createIcons();
+            }
+
+            const genreEl = document.getElementById(`genre_${id}`);
+            const genre = genreEl ? genreEl.value : (l.pitch_genre || (state.profile && state.profile.pitch_genre) || 'Competitor Case Study & Authority');
+
+            try {
+                const res = await fetch('/api/pitch/single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: l.name,
+                        channel_type: l.channel_type,
+                        headline: l.headline || l.address,
+                        user_notes: l.user_notes,
+                        pitch_type: 'social',
+                        pitch_genre: genre
+                    })
+                });
+                const pitch = await res.json();
+                l.social_pitch = pitch.social_pitch || pitch.body || '';
+
+                const socEl = document.getElementById(`social_pitch_${id}`);
+                if (socEl) socEl.value = l.social_pitch;
+            } catch(e) {
+                console.error(e);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="wand-2" class="w-3 h-3 text-pink-400"></i><span>AI Generate Social DM</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function generateSinglePitch(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+            const ch = l.channel_type || activeChannel;
+            if (ch === 'linkedin') {
+                await Promise.all([generateSingleEmailPitch(id), generateSingleLinkedInPitch(id)]);
+            } else if (ch === 'reddit' || ch === 'x') {
+                await Promise.all([generateSingleEmailPitch(id), generateSingleSocialPitch(id)]);
+            } else {
+                await Promise.all([generateSingleEmailPitch(id), generateSingleWhatsAppPitch(id)]);
+            }
+        }
+
+        async function generateAllPitches() {
+            const leads = getCurrentLeads();
+            if (!leads || leads.length === 0) return;
+
+            const btn = document.getElementById('btnGenAll');
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Generating...</span>`;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/pitch/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ leads })
+                });
+                const data = await res.json();
+                if (activeChannel === 'vault') state.vault = data.leads;
+                else state[activeChannel] = data.leads;
+                renderLeads();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="wand-2" class="w-3.5 h-3.5"></i><span>Batch AI Pitch</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        async function saveLead(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const subjEl = document.getElementById(`subj_${id}`);
+            const bodyEl = document.getElementById(`body_${id}`);
+            const waEl = document.getElementById(`wa_pitch_${id}`);
+            const liEl = document.getElementById(`li_pitch_${id}`);
+            const socEl = document.getElementById(`social_pitch_${id}`);
+            if (subjEl) l.subject = subjEl.value;
+            if (bodyEl) l.body = bodyEl.value;
+            if (waEl) l.whatsapp_pitch = waEl.value;
+            if (liEl) l.linkedin_pitch = liEl.value;
+            if (socEl) l.social_pitch = socEl.value;
+
+            await fetch('/api/leads/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lead: l })
+            });
+            l.is_saved = true;
+            refreshMetrics();
+            alert(`Saved ${l.name} to Vault!`);
+            renderLeads();
+        }
+
+        async function saveSelectedLeads() {
+            const leads = getCurrentLeads().filter(l => selectedLeadIds.has(l.id));
+            if (!leads || leads.length === 0) {
+                alert("Please select at least one lead using the checkboxes first!");
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveSelected');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Saving...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                await fetch('/api/leads/save-batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ leads })
+                });
+                leads.forEach(l => l.is_saved = true);
+                await refreshMetrics();
+                alert(`Successfully saved ${leads.length} selected lead(s) to Vault!`);
+                renderLeads();
+            } catch(e) {
+                alert("Error saving selected leads to vault.");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="bookmark" class="w-3.5 h-3.5 text-red-400"></i><span>Save Selected to Vault</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function deleteLeadFromVault(id) {
+            if (!confirm("Are you sure you want to delete this lead from the Vault?")) return;
+            try {
+                await fetch(`/api/leads/delete/${id}`, { method: 'DELETE' });
+                selectedLeadIds.delete(id);
+                if (activeChannel === 'vault') {
+                    state.vault = state.vault.filter(l => l.id !== id);
+                } else {
+                    const l = getCurrentLeads().find(item => item.id === id);
+                    if (l) l.is_saved = false;
+                }
+                await refreshMetrics();
+                renderLeads();
+            } catch(e) {
+                alert("Error deleting lead.");
+            }
+        }
+
+        async function deleteSelectedLeads() {
+            const selectedIds = Array.from(selectedLeadIds);
+            if (!selectedIds || selectedIds.length === 0) {
+                alert("Please select at least one lead to delete!");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected lead(s)?`)) return;
+
+            const btn = document.getElementById('btnDeleteSelected');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Deleting...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                await fetch('/api/leads/delete-batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lead_ids: selectedIds })
+                });
+
+                if (activeChannel === 'vault') {
+                    state.vault = state.vault.filter(l => !selectedLeadIds.has(l.id));
+                } else {
+                    getCurrentLeads().forEach(l => {
+                        if (selectedLeadIds.has(l.id)) l.is_saved = false;
+                    });
+                }
+                selectedLeadIds.clear();
+                await refreshMetrics();
+                alert(`Deleted ${selectedIds.length} lead(s).`);
+                renderLeads();
+            } catch(e) {
+                alert("Error deleting selected leads.");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i><span>Delete Selected</span>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function refreshMetrics() {
+            try {
+                const res = await fetch('/api/leads/metrics');
+                const m = await res.json();
+                if (m) {
+                    document.getElementById('m_total').innerText = m.total || 0;
+                    document.getElementById('m_linkedin').innerText = m.linkedin || 0;
+                    document.getElementById('m_web').innerText = m.web || 0;
+                    document.getElementById('m_reddit').innerText = m.reddit || 0;
+                    document.getElementById('m_x').innerText = m.x || 0;
+                    document.getElementById('m_verified').innerText = m.verified_count || 0;
+                    document.getElementById('m_ready').innerText = m.emails_ready || 0;
+                }
+            } catch(e) {}
+        }
+
+
+        async function exportCSV() {
+            const leads = getCurrentLeads();
+            if (!leads || leads.length === 0) return;
+            const res = await fetch('/api/leads/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(leads)
+            });
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "adfuzionz_leads_export.csv";
+            a.click();
+        }
+
+        // CAMPAIGN DISPATCH LOGIC
+        function openCampaignModal() {
+            const leads = getCurrentLeads().filter(l => selectedLeadIds.has(l.id));
+            document.getElementById('modalTargetCount').innerText = `${leads.length} Targets`;
+            document.getElementById('modalCampaign').classList.remove('hidden');
+            updateCampaignEstimate();
+        }
+        function closeCampaignModal() {
+            document.getElementById('modalCampaign').classList.add('hidden');
+        }
+
+        async function updateCampaignEstimate() {
+            const count = selectedLeadIds.size || getCurrentLeads().length;
+            const safety = document.getElementById('selSafety').value;
+            const res = await fetch(`/api/campaign/calculate?count=${count}&safety_level=${safety}`, { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('modalDuration').innerText = `~${data.estimated_duration_minutes} mins`;
+        }
+
+        async function startCampaign() {
+            const leads = getCurrentLeads().filter(l => selectedLeadIds.has(l.id));
+            if (leads.length === 0) {
+                alert("Please select at least one lead with a valid email address!");
+                return;
+            }
+
+            const safety = document.getElementById('selSafety').value;
+            document.getElementById('wrapProgress').classList.remove('hidden');
+            document.getElementById('btnLaunchCampaign').disabled = true;
+
+            await fetch('/api/campaign/dispatch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ leads, safety_level: safety })
+            });
+
+            pollCampaignStatus();
+        }
+
+        async function pollCampaignStatus() {
+            const interval = setInterval(async () => {
+                const res = await fetch('/api/campaign/status');
+                const st = await res.json();
+                
+                const pct = st.total > 0 ? Math.round(((st.sent + st.failed) / st.total) * 100) : 0;
+                document.getElementById('barProgress').style.width = `${pct}%`;
+                document.getElementById('txtProgCount').innerText = `${st.sent + st.failed} / ${st.total}`;
+                
+                const boxLogs = document.getElementById('boxLogs');
+                boxLogs.innerHTML = (st.logs || []).map(log => `<div>${escapeHtml(log)}</div>`).join('');
+                boxLogs.scrollTop = boxLogs.scrollHeight;
+
+                if (!st.is_running && (st.sent + st.failed >= st.total)) {
+                    clearInterval(interval);
+                    document.getElementById('txtProgStatus').innerText = "Campaign Completed!";
+                    document.getElementById('btnLaunchCampaign').disabled = false;
+                    refreshMetrics();
+                }
+            }, 1000);
+        }
+
+        // PROFILE MODAL
+        function openProfileModal() { document.getElementById('modalProfile').classList.remove('hidden'); }
+        function closeProfileModal() { document.getElementById('modalProfile').classList.add('hidden'); }
+
+        function updateLeadGenre(id, val) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (l) l.pitch_genre = val;
+        }
+
+        async function saveBrandProfile() {
+            const profile = {
+                company_name: document.getElementById('profCompany').value,
+                founder_name: document.getElementById('profFounder').value,
+                website_url: document.getElementById('profWebsite').value,
+                booking_url: document.getElementById('profBooking').value,
+                primary_offer: document.getElementById('profOffer').value,
+                pitch_genre: document.getElementById('profGenre') ? document.getElementById('profGenre').value : "Competitor Case Study & Authority",
+                tone: document.getElementById('profGenre') ? document.getElementById('profGenre').value : "Direct, sharp, result-oriented",
+                cta: "Book a call",
+                niche: "General"
+            };
+            await fetch('/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profile)
+            });
+            state.profile = profile;
+            document.getElementById('brandDisplay').innerText = `${profile.company_name} • ${profile.founder_name}`;
+            closeProfileModal();
+        }
+
+        // 1-CLICK DIRECT OUTREACH HANDLERS
+        function openLinkedInOutreach(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const liEl = document.getElementById(`li_pitch_${id}`);
+            const bodyEl = document.getElementById(`body_${id}`);
+            const pitchText = liEl && liEl.value.trim() ? liEl.value : (l.linkedin_pitch || (bodyEl ? bodyEl.value : (l.body || '')));
+
+            if (pitchText) {
+                try {
+                    navigator.clipboard.writeText(pitchText);
+                } catch(e) {}
+            }
+            
+            let targetUrl = l.website;
+            if (!targetUrl || !targetUrl.includes('linkedin.com')) {
+                const searchQ = (l.name + ' ' + (l.address || '')).replace(/Attur, Salem, Tamil Nadu, 636108/g, 'Attur Salem').trim();
+                targetUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(searchQ)}`;
+            } else if (!targetUrl.startsWith('http')) {
+                targetUrl = 'https://' + targetUrl;
+            }
+            window.open(targetUrl, '_blank');
+        }
+
+        function openSocialDMOutreach(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const socEl = document.getElementById(`social_pitch_${id}`);
+            const bodyEl = document.getElementById(`body_${id}`);
+            const pitchText = socEl && socEl.value.trim() ? socEl.value : (l.social_pitch || (bodyEl ? bodyEl.value : (l.body || '')));
+
+            if (pitchText) {
+                try {
+                    navigator.clipboard.writeText(pitchText);
+                } catch(e) {}
+            }
+            
+            let targetUrl = l.website || `https://www.google.com/search?q=${encodeURIComponent(l.name)}`;
+            if (targetUrl && !targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
+            window.open(targetUrl, '_blank');
+        }
+
+        function openWhatsAppOutreach(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const waEl = document.getElementById(`wa_pitch_${id}`);
+            const bodyEl = document.getElementById(`body_${id}`);
+            const pitchText = waEl && waEl.value.trim() ? waEl.value : (l.whatsapp_pitch || (bodyEl ? bodyEl.value : (l.body || '')));
+
+            let cleanPhone = (l.phone || '').replace(/[^0-9]/g, '');
+            if (cleanPhone.length === 10 && ['6','7','8','9'].includes(cleanPhone[0])) {
+                cleanPhone = '91' + cleanPhone;
+            }
+
+            let waUrl = '';
+            if (cleanPhone && cleanPhone.length >= 10) {
+                waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(pitchText)}`;
+            } else {
+                waUrl = `https://wa.me/?text=${encodeURIComponent(pitchText)}`;
+            }
+            window.open(waUrl, '_blank');
+        }
+
+        function openMailOutreach(id) {
+            const leads = getCurrentLeads();
+            const l = leads.find(item => item.id === id);
+            if (!l) return;
+
+            const subjEl = document.getElementById(`subj_${id}`);
+            const bodyEl = document.getElementById(`body_${id}`);
+            const subjText = subjEl ? subjEl.value : (l.subject || '');
+            const pitchText = bodyEl ? bodyEl.value : (l.body || '');
+
+            const email = l.primary_email || '';
+            const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subjText)}&body=${encodeURIComponent(pitchText)}`;
+            window.location.href = mailtoUrl;
+        }
+
+        // GEOCODE AUTOCOMPLETE HANDLERS WITH INDIAN PRIORITY
+        let geoDebounceTimer = null;
+        async function handleLocationTyping(val) {
+            clearTimeout(geoDebounceTimer);
+            const drop = document.getElementById('geoDropdown');
+            if (!val || val.trim().length < 2) {
+                drop.classList.add('hidden');
+                drop.innerHTML = '';
+                return;
+            }
+            geoDebounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/geocode?q=${encodeURIComponent(val.trim())}`);
+                    const list = await res.json();
+                    if (list && list.length > 0) {
+                        drop.innerHTML = list.map(item => `
+                            <div onclick="selectGeo('${escapeHtml(item).replace(/'/g, "\\'")}')" class="px-4 py-2.5 hover:bg-red-600/20 hover:text-white text-zinc-300 text-xs cursor-pointer border-b border-white/5 flex items-center space-x-2">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-red-400"></i>
+                                <span>${escapeHtml(item)}</span>
+                            </div>
+                        `).join('');
+                        drop.classList.remove('hidden');
+                        lucide.createIcons();
+                    } else {
+                        drop.classList.add('hidden');
+                    }
+                } catch(e) {
+                    drop.classList.add('hidden');
+                }
+            }, 300);
+        }
+
+        function selectGeo(val) {
+            document.getElementById('inputLocation').value = val;
+            document.getElementById('geoDropdown').classList.add('hidden');
+        }
+
+        async function useCurrentLocation() {
+            const locInput = document.getElementById('inputLocation');
+            const locBtn = document.getElementById('btnGeoLocate');
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported on this device/browser.");
+                return;
+            }
+            if (locBtn) {
+                locBtn.disabled = true;
+                locBtn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin text-red-400"></i><span>Locating...</span>`;
+                lucide.createIcons();
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                    const data = await res.json();
+                    const addr = data.address || {};
+                    const city = addr.city || addr.town || addr.village || addr.suburb || addr.county || "";
+                    const state = addr.state || "";
+                    const country = addr.country || "";
+                    const cleanLoc = [city, state, country].filter(Boolean).join(", ");
+                    if (cleanLoc) {
+                        locInput.value = cleanLoc;
+                    } else {
+                        locInput.value = `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+                    }
+                } catch(e) {
+                    locInput.value = `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+                } finally {
+                    if (locBtn) {
+                        locBtn.disabled = false;
+                        locBtn.innerHTML = `<i data-lucide="navigation" class="w-3 h-3 text-red-400"></i><span>GPS Auto</span>`;
+                        lucide.createIcons();
+                    }
+                }
+            }, (err) => {
+                alert("Location access denied or unavailable.");
+                if (locBtn) {
+                    locBtn.disabled = false;
+                    locBtn.innerHTML = `<i data-lucide="navigation" class="w-3 h-3 text-red-400"></i><span>GPS Auto</span>`;
+                    lucide.createIcons();
+                }
+            }, { enableHighAccuracy: true, timeout: 8000 });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
