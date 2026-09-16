@@ -710,51 +710,61 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
                         if phone == "N/A" or address == "N/A" or len(address) < 8 or address.lower() == name.lower():
                             try:
                                 art.click()
-                                page.wait_for_timeout(350)
+                                page.wait_for_timeout(400)
 
-                                if phone == "N/A":
-                                    # Strategy A: Check phone elements by data-item-id or aria-label
-                                    phone_els = page.locator('button[data-item-id*="phone"], a[data-item-id*="phone"], button[aria-label*="Phone"], button[aria-label*="phone"]').all()
-                                    for p_el in phone_els:
-                                        aria_val = p_el.get_attribute("aria-label") or ""
-                                        txt_val = p_el.inner_text() or ""
-                                        p_match = parse_phone(aria_val)
-                                        if p_match == "N/A":
-                                            p_match = parse_phone(txt_val)
-                                        if p_match != "N/A":
-                                            phone = p_match
-                                            break
+                                # Verify detail pane heading matches current card name before reading pane elements
+                                pane_h1 = page.locator('h1.DUwfxb, h1.fontHeadlineLarge, h1').first
+                                pane_matches = False
+                                if pane_h1.count() > 0:
+                                    h1_txt = pane_h1.inner_text().strip().lower()
+                                    first_w = re.sub(r'[^a-zA-Z0-9]', '', name.split()[0].lower()) if name.split() else ""
+                                    if first_w and len(first_w) >= 3 and first_w in h1_txt:
+                                        pane_matches = True
 
-                                if phone == "N/A":
-                                    # Strategy B: Search info line text elements in pane
-                                    info_divs = page.locator('div.Io6YTe, button.CsBvaf, div.R9zWif').all()
-                                    for div_el in info_divs:
-                                        p_match = parse_phone(div_el.inner_text())
-                                        if p_match != "N/A":
-                                            phone = p_match
-                                            break
-
-                                if phone == "N/A":
-                                    # Strategy C: Full detail pane text scan line by line
-                                    pane = page.locator('div[role="main"]').first
-                                    if pane.count() > 0:
-                                        for line in pane.inner_text().split("\n"):
-                                            p_match = parse_phone(line)
+                                if pane_matches:
+                                    if phone == "N/A":
+                                        # Strategy A: Check phone elements by data-item-id or aria-label
+                                        phone_els = page.locator('button[data-item-id*="phone"], a[data-item-id*="phone"], button[aria-label*="Phone"], button[aria-label*="phone"]').all()
+                                        for p_el in phone_els:
+                                            aria_val = p_el.get_attribute("aria-label") or ""
+                                            txt_val = p_el.inner_text() or ""
+                                            p_match = parse_phone(aria_val)
+                                            if p_match == "N/A":
+                                                p_match = parse_phone(txt_val)
                                             if p_match != "N/A":
                                                 phone = p_match
                                                 break
 
-                                addr_btn = page.locator('button[aria-label*="Address:"], button[aria-label*="address"]').first
-                                if addr_btn.count() > 0:
-                                    aria_addr = addr_btn.get_attribute("aria-label") or ""
-                                    clean_addr = aria_addr.replace("Address:", "").replace("address:", "").strip()
-                                    if clean_addr:
-                                        address = clean_addr
+                                    if phone == "N/A":
+                                        # Strategy B: Search info line text elements in pane
+                                        info_divs = page.locator('div.Io6YTe, button.CsBvaf, div.R9zWif').all()
+                                        for div_el in info_divs:
+                                            p_match = parse_phone(div_el.inner_text())
+                                            if p_match != "N/A":
+                                                phone = p_match
+                                                break
 
-                                if not website:
-                                    web_btn = page.locator('a[data-item-id="authority"], button[aria-label*="Website:"]').first
-                                    if web_btn.count() > 0:
-                                        website = web_btn.get_attribute("href") or ""
+                                    if phone == "N/A":
+                                        # Strategy C: Full detail pane text scan line by line
+                                        pane = page.locator('div[role="main"]').first
+                                        if pane.count() > 0:
+                                            for line in pane.inner_text().split("\n"):
+                                                p_match = parse_phone(line)
+                                                if p_match != "N/A":
+                                                    phone = p_match
+                                                    break
+
+                                    addr_btn = page.locator('button[aria-label*="Address:"], button[aria-label*="address"]').first
+                                    if addr_btn.count() > 0:
+                                        aria_addr = addr_btn.get_attribute("aria-label") or ""
+                                        clean_addr = aria_addr.replace("Address:", "").replace("address:", "").strip()
+                                        if clean_addr:
+                                            address = clean_addr
+
+                                    if not website:
+                                        web_btn = page.locator('a[data-item-id="authority"], button[aria-label*="Website:"]').first
+                                        if web_btn.count() > 0:
+                                            website = web_btn.get_attribute("href") or ""
                             except Exception:
                                 pass
 
@@ -945,7 +955,21 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
                 "address": f"Main Road, {loc_tag}"
             })
 
-    return extracted
+    # Strict phone number deduplication across candidates
+    seen_phones = set()
+    cleaned_extracted = []
+    for item in extracted:
+        p = item.get("phone", "N/A")
+        if p and p != "N/A":
+            digits = re.sub(r'\D', '', p)
+            if len(digits) >= 10:
+                if digits in seen_phones:
+                    item["phone"] = "N/A"
+                else:
+                    seen_phones.add(digits)
+        cleaned_extracted.append(item)
+
+    return cleaned_extracted
 
 
 async def search_web_brands(query: str, industry: str = "", location: str = "", pincode: str = "", limit: int = 8, seen_ids: set = None) -> List[Dict[str, Any]]:
