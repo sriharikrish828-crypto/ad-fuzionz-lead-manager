@@ -478,6 +478,20 @@ async def search_linkedin_intent(role: str, industry: str = "", location: str = 
     return results
 
 
+BAD_NAME_KEYWORDS = [
+    "list of", "top 10", "top 50", "directory", "pdf", "500 business", "catalogue", 
+    "document", "overview", "hiring", "jobs", "yellow pages", "indiamart", "justdial",
+    "sulekha", "quikr", "tradeindia", "wikipedia"
+]
+
+
+def is_bad_business_name(name: str) -> bool:
+    if not name or len(name.strip()) < 3:
+        return True
+    n_low = name.lower()
+    return any(bad in n_low for bad in BAD_NAME_KEYWORDS)
+
+
 # --- WEB & GOOGLE MAPS SCRAPER WITH PINCODE SUPPORT ---
 def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set) -> List[Dict[str, Any]]:
     extracted = []
@@ -495,12 +509,12 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
             for item in data:
                 nm = item.get("name") or item.get("display_name", "").split(",")[0].strip()
                 display = item.get("display_name", "")
-                if not nm or nm.lower() in seen_ids or len(nm) < 3 or any(b in nm.lower() for b in ["district", "state", "road", "street"]):
+                if not nm or nm.lower() in seen_ids or is_bad_business_name(nm) or any(b in nm.lower() for b in ["district", "state", "road", "street"]):
                     continue
                 seen_ids.add(nm.lower())
                 extracted.append({
                     "name": nm,
-                    "website": f"https://www.google.com/search?q={quote_plus(nm + ' ' + search_term)}",
+                    "website": f"https://www.google.com/maps/search/{quote_plus(nm + ' ' + search_term)}",
                     "phone": "N/A",
                     "address": display[:80]
                 })
@@ -508,6 +522,7 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
                     return extracted
     except Exception:
         pass
+
 
     try:
         with sync_playwright() as p:
@@ -814,11 +829,14 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
         seen_ids = set()
 
     clean_ind = str(industry or "").strip()
+    if clean_ind.lower() in ["public", "n/a", "general", "none", "practice", "all", "other", "services"]:
+        clean_ind = ""
+
     raw_loc = f"{str(location or '').strip()} {str(pincode or '').strip()}".strip()
     loc_info = normalize_location_terms(raw_loc)
     primary_loc = loc_info["primary"]
     
-    search_term = f"{query} {clean_ind} {primary_loc or raw_loc}".strip()
+    search_term = re.sub(r'\s+', ' ', f"{query} {clean_ind} {primary_loc or raw_loc}".strip())
     
     # Use a copy of seen_ids for maps scrape so process_candidate doesn't drop candidates
     maps_seen = set(seen_ids)
@@ -826,12 +844,12 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
 
     # Fallback if primary location returned 0 candidates and secondary location exists
     if not raw_candidates and loc_info["secondary"] and loc_info["secondary"] != primary_loc:
-        fallback_term = f"{query} {clean_ind} {loc_info['secondary']}".strip()
+        fallback_term = re.sub(r'\s+', ' ', f"{query} {clean_ind} {loc_info['secondary']}".strip())
         raw_candidates = await asyncio.to_thread(_sync_google_maps_scrape, fallback_term, limit, maps_seen)
 
     # Final fallback if still 0 candidates and raw_loc is different
     if not raw_candidates and raw_loc and raw_loc != primary_loc and raw_loc != loc_info["secondary"]:
-        fallback_term = f"{query} {clean_ind} {raw_loc}".strip()
+        fallback_term = re.sub(r'\s+', ' ', f"{query} {clean_ind} {raw_loc}".strip())
         raw_candidates = await asyncio.to_thread(_sync_google_maps_scrape, fallback_term, limit, maps_seen)
 
     results = []
@@ -842,7 +860,7 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
             email = ""
             email_status = "Pending"
 
-            if website:
+            if website and website.startswith("http") and "google.com/maps" not in website and "google.com/search" not in website:
                 try:
                     card = await extract_contact_info(client, website)
                     email = card["email"]
@@ -858,35 +876,40 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
                 email_status = inferred["status"]
 
             company_loc = item["address"] if item["address"] and item["address"] != "N/A" and item["address"] != search_term else (raw_loc or primary_loc or "Location Specified")
-            maps_target = website or f"https://www.google.com/maps/search/{quote_plus(item['name'] + ' ' + company_loc)}"
+            if is_bad_business_name(item["name"]):
+                return None
+
+            # Always format maps search link with full business name + explicit target location
+            maps_target = website if (website and website.startswith("http") and "google.com/maps" not in website and "google.com/search" not in website) else f"https://www.google.com/maps/search/{quote_plus(item['name'] + ' ' + (company_loc if company_loc != 'Location Specified' else (primary_loc or raw_loc)))}"
 
             return {
                 "id": f"web_{abs(hash(item['name'])) % 1000000}",
                 "channel_type": "web",
                 "name": item["name"],
                 "headline": f"Phone: {phone} | {company_loc[:50]}" if phone != "N/A" else f"Local Business | {company_loc[:50]}",
-                "industry": clean_ind or "Business & Local Services",
+                "industry": clean_ind or f"{query.title()} Practice",
                 "address": company_loc,
                 "phone": phone,
                 "website": maps_target,
                 "primary_email": email,
                 "email_status": email_status,
-                "user_notes": f"Industry: {clean_ind or 'General'} | Location: {company_loc}",
+                "user_notes": f"Industry: {clean_ind or query.title()} | Location: {company_loc}",
                 "subject": "",
                 "body": "",
                 "is_saved": False
             }
 
         tasks = [process_candidate(item) for item in raw_candidates]
-        processed_leads = await asyncio.gather(*tasks)
+        processed_leads = [res for res in await asyncio.gather(*tasks) if res is not None]
 
         for lead in processed_leads:
-            if lead["name"].lower() in seen_ids:
+            if lead["name"].lower() in seen_ids or is_bad_business_name(lead["name"]):
                 continue
             seen_ids.add(lead["name"].lower())
             results.append(lead)
             if len(results) >= limit:
                 break
+
 
     return results
 

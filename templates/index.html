@@ -560,6 +560,12 @@
                 ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800/60 whitespace-nowrap shrink-0">Verified Mail</span>`
                 : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800/60 whitespace-nowrap shrink-0">Inferred Mail</span>`;
 
+            const activeLoc = (l.address && l.address !== 'Location Specified' && l.address !== 'N/A' && l.address !== 'Global') 
+                ? l.address 
+                : (document.getElementById('inputLocation') ? document.getElementById('inputLocation').value : '');
+            const mapsSearchQuery = `${l.name} ${activeLoc}`.trim();
+            const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(mapsSearchQuery)}`;
+
             return `
                 <div class="frosted-glass rounded-2xl p-5 space-y-4 border ${isChecked ? 'border-red-500 bg-red-950/10' : 'border-white/10'} transition">
                     <div class="flex items-start justify-between">
@@ -572,12 +578,13 @@
                                 <p class="text-xs text-zinc-400 mt-0.5 line-clamp-1">${escapeHtml(l.headline || '')}</p>
                                 <div class="flex flex-wrap gap-1.5 mt-2">
                                     ${l.industry ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-950/80 text-purple-300 border border-purple-800/60 flex items-center space-x-1"><i data-lucide="briefcase" class="w-2.5 h-2.5"></i><span>${escapeHtml(l.industry)}</span></span>` : ''}
-                                    ${l.address ? `<a href="https://www.google.com/maps/search/${encodeURIComponent(l.name + ' ' + (l.address || ''))}" target="_blank" title="Click to view location on Google Maps" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800/90 hover:bg-red-950/80 text-zinc-300 hover:text-white border border-white/10 hover:border-red-500/50 flex items-center space-x-1 transition cursor-pointer"><i data-lucide="map-pin" class="w-2.5 h-2.5 text-red-400"></i><span>${escapeHtml(l.address)}</span></a>` : ''}
+                                    ${l.address ? `<a href="${mapsUrl}" target="_blank" title="Click to view location on Google Maps" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800/90 hover:bg-red-950/80 text-zinc-300 hover:text-white border border-white/10 hover:border-red-500/50 flex items-center space-x-1 transition cursor-pointer"><i data-lucide="map-pin" class="w-2.5 h-2.5 text-red-400"></i><span>${escapeHtml(l.address)}</span></a>` : ''}
                                 </div>
                             </div>
                         </div>
                         <div>${statusBadge}</div>
                     </div>
+
 
                     <!-- CONTACT INFORMATION -->
                     <div class="grid grid-cols-2 gap-2 text-xs bg-black/40 p-3 rounded-xl border border-white/5">
