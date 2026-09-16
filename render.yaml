@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ad-fuzionz-lead-manager
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 10000
