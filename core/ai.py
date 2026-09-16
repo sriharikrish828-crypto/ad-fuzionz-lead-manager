@@ -22,6 +22,27 @@ def clean_reasoning_lead(text: str) -> str:
     return cleaned[tag_match.start():] if tag_match else cleaned.strip()
 
 
+def strip_emojis(text: str) -> str:
+    if not text:
+        return ""
+    emoji_pattern = re.compile(
+        "["
+        "\U00010000-\U0010FFFF"
+        "\u2600-\u27BF"
+        "\u2300-\u23FF"
+        "\u2B50-\u2B55"
+        "\u203C-\u2049"
+        "\u25AA-\u25FE"
+        "\u00A9\u00AE"
+        "\u2122"
+        "]+", flags=re.UNICODE
+    )
+    cleaned = emoji_pattern.sub("", text)
+    cleaned = cleaned.replace("👉", "").replace("👋", "").replace("😉", "").replace("🔥", "").replace("💡", "").replace("👀", "").replace("💎", "").replace("🚀", "").replace("📞", "").replace("📲", "").replace("", "")
+    lines = [re.sub(r'[ \t]+', ' ', l).strip() for l in cleaned.split('\n')]
+    return '\n'.join(lines)
+
+
 def clean_and_infer_industry(lead_name: str, context_info: str, brand_offer: str = "") -> dict:
     """
     Strips raw physical street addresses, phone numbers, and raw labels.
@@ -70,39 +91,22 @@ def clean_and_infer_industry(lead_name: str, context_info: str, brand_offer: str
         competitor_ref = "industry-leading brands"
         niche_product = "products & services"
 
-    # Tailor bullet points specifically to brand_offer if provided
-    offer_low = (brand_offer or "").lower()
-    if "web" in offer_low or "site" in offer_low or "landing page" in offer_low:
+    # Prioritize exact brand_offer string if provided by user
+    if brand_offer and brand_offer.strip():
+        service_desc = brand_offer.strip()
+        bullets = [
+            f"High-converting modern digital presence & offer for {niche_label}",
+            f"Mobile-first design optimized for instant customer enquiries in {city}",
+            "Fast load speed & local Google Maps SEO optimization",
+            "WhatsApp & online customer booking integration to convert local visitors"
+        ]
+    else:
         service_desc = "building high-converting websites & digital storefronts"
         bullets = [
             f"High-converting modern website & digital storefront for {niche_label}",
             f"Mobile-first design optimized for instant customer enquiries in {city}",
             "Fast load speed & local Google Maps SEO optimization",
             "WhatsApp & online customer booking integration to convert local visitors"
-        ]
-    elif "video" in offer_low or "ad" in offer_low or "media" in offer_low or "smm" in offer_low:
-        service_desc = "creating high-converting video ads & social media campaigns"
-        bullets = [
-            f"High-converting video ads showcasing premium {niche_product}",
-            f"Targeted local Meta/Instagram campaigns around {city}",
-            f"Dedicated landing pages built for instant lead capture",
-            "Social media marketing (SMM) boosting daily store foot traffic"
-        ]
-    elif brand_offer and brand_offer.strip():
-        service_desc = brand_offer.strip()
-        bullets = [
-            f"Customized {brand_offer.strip()} tailored for {niche_label}",
-            f"Targeted local strategy for customer growth around {city}",
-            f"High-converting customer acquisition system",
-            f"Dedicated digital optimization for {lead_name}"
-        ]
-    else:
-        service_desc = "building high-converting websites & online presence"
-        bullets = [
-            f"High-converting modern website & digital catalog for {niche_label}",
-            f"Mobile-first design optimized for instant customer enquiries in {city}",
-            "Fast load speed & Google Maps SEO optimization",
-            "WhatsApp & instant booking integration to convert local visitors"
         ]
 
     return {
@@ -134,47 +138,49 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
 
     if pitch_type == "linkedin":
         li_pitch = (
-            f"Hi {lead_name} 👋\n\n"
+            f"Hi {lead_name},\n\n"
             f"Came across your brand in {city} and was really impressed by your local reputation.\n\n"
             f"I'm {brand.founder_name} from {brand.company_name}. We specialize in {service_desc}, helping {niche_label} scale online enquiries and turn local traffic into loyal customers.\n\n"
             f"Would love to connect and share a quick case study breakdown for {lead_name} if you're open to exploring options ({booking_url})!\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
+        li_clean = strip_emojis(li_pitch)
         return {
             "subject": f"Connecting with {lead_name}",
-            "body": li_pitch,
-            "whatsapp_pitch": li_pitch,
-            "linkedin_pitch": li_pitch,
-            "social_pitch": li_pitch
+            "body": li_clean,
+            "whatsapp_pitch": li_clean,
+            "linkedin_pitch": li_clean,
+            "social_pitch": li_clean
         }
 
     if pitch_type == "social":
         soc_pitch = (
-            f"Hi {lead_name} 👋\n\n"
+            f"Hi {lead_name},\n\n"
             f"Came across your brand in {city} and love what you've built!\n\n"
-            f"At {brand.company_name}, we help {niche_label} scale revenue by {service_desc}.{notes_clause}\n\n"
+            f"At {brand.company_name}, we help {niche_label} scale revenue through {service_desc}.{notes_clause}\n\n"
             f"Would love to drop a quick 2-min breakdown for {lead_name}. Open to a quick chat?\n\n"
-            f"👉 {booking_url}\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
+        soc_clean = strip_emojis(soc_pitch)
         return {
             "subject": f"Hey {lead_name}",
-            "body": soc_pitch,
-            "whatsapp_pitch": soc_pitch,
-            "linkedin_pitch": soc_pitch,
-            "social_pitch": soc_pitch
+            "body": soc_clean,
+            "whatsapp_pitch": soc_clean,
+            "linkedin_pitch": soc_clean,
+            "social_pitch": soc_clean
         }
 
     if "competitor" in genre_lower or "case study" in genre_lower or "authority" in genre_lower:
         wa_pitch = (
-            f"Hi {lead_name} team 👋\n\n"
-            f"I came across your profile recently — the reviews and local reputation you've built in {city} are really impressive!\n\n"
-            f"I'm {brand.founder_name} from {brand.company_name}. We specialize in {service_desc} for {niche_label}, helping scale customer enquiries and revenue.{notes_clause}\n\n"
-            f"Seeing your strong local trust, taking your digital presence to the next level can capture even more local buyers. If you're open to it, I can share our work details and case studies here for your reference.\n\n"
-            f"Would you be open to a quick 10-minute call this week? I can share the work details & live samples first — no obligation! 😉\n\n"
-            f"👉 {booking_url}\n\n"
+            f"Hi {lead_name} team,\n\n"
+            f"I came across your profile recently -- the reviews and local reputation you've built in {city} are really impressive!\n\n"
+            f"I'm {brand.founder_name} from {brand.company_name}. We specialize in {service_desc}.\n\n"
+            f"Seeing your strong local trust, taking your digital presence to the next level can capture even more local buyers. If you're open to it, I can share our work details and case studies here for your reference.{notes_clause}\n\n"
+            f"Would you be open to a quick 10-minute call this week? I can share the work details & live samples first -- no obligation!\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
@@ -182,8 +188,8 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         email_body = (
             f"Hi {lead_name} team,\n\n"
             f"I came across your business profile recently and was really impressed by your reputation in {city}.\n\n"
-            f"At {brand.company_name}, we specialize in {service_desc} for {niche_label}, helping transform local reputation into consistent online customer enquiries.{notes_clause}\n\n"
-            f"Seeing your strong brand reputation, I'd love to share our case study details and website breakdown for your reference.\n\n"
+            f"At {brand.company_name}, we specialize in {service_desc}, helping transform local reputation into consistent online customer enquiries.{notes_clause}\n\n"
+            f"Seeing your strong brand reputation, I'd love to share our case study details and work samples for your reference.\n\n"
             f"You can pick 10 minutes on my calendar to review our work samples whenever convenient: {booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name}\n"
@@ -191,13 +197,13 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         )
     elif "conversational" in genre_lower:
         wa_pitch = (
-            f"Hi {lead_name} team 👋\n\n"
+            f"Hi {lead_name} team,\n\n"
             f"Hope you're having a great week! I was checking out top businesses in {city} and was really impressed by your brand.\n\n"
             f"I'm {brand.founder_name} from {brand.company_name}. We help {niche_label} scale customer inquiries and online sales through {service_desc}.{notes_clause}\n\n"
             f"With your strong local trust, upgrading your digital presence can help you capture even more shoppers online.\n\n"
             f"Would you be open to a quick, no-pressure chat this week to see how we can boost your digital conversions?\n\n"
             f"You can pick a convenient time here:\n"
-            f"👉 {booking_url}\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
@@ -213,16 +219,16 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         )
     elif "pain point" in genre_lower:
         wa_pitch = (
-            f"Hi {lead_name} team 👋\n\n"
-            f"Quick question — are you currently capturing all the digital enquiries and local demand around {city}?\n\n"
+            f"Hi {lead_name} team,\n\n"
+            f"Quick question -- are you currently capturing all the digital enquiries and local demand around {city}?\n\n"
             f"Many top {niche_label} lose potential buyers because they lack a modern, high-converting digital experience.{notes_clause}\n\n"
-            f"I'm {brand.founder_name} from {brand.company_name}. We solve this by {service_desc} specifically for {niche_label}.\n\n"
-            f"💡 Here is what we would deploy for {lead_name}:\n"
+            f"I'm {brand.founder_name} from {brand.company_name}. We solve this through {service_desc}.\n\n"
+            f"Here is what we would deploy for {lead_name}:\n"
             f"• {bullets[0]}\n"
             f"• {bullets[1]}\n"
             f"• {bullets[2]}\n\n"
             f"Open to a brief 10-min strategy breakdown to plug these gaps?\n\n"
-            f"👉 {booking_url}\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
@@ -230,7 +236,7 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         email_body = (
             f"Hi {lead_name} team,\n\n"
             f"Are you currently capturing all the high-intent customer enquiries in {city}?\n\n"
-            f"At {brand.company_name}, we help {niche_label} plug conversion gaps by {service_desc}.{notes_clause}\n\n"
+            f"At {brand.company_name}, we help {niche_label} plug conversion gaps through {service_desc}.{notes_clause}\n\n"
             f"Here is what we would build for {lead_name}:\n"
             f"- {bullets[0]}\n"
             f"- {bullets[1]}\n"
@@ -242,11 +248,11 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         )
     elif "punchy" in genre_lower or "short" in genre_lower:
         wa_pitch = (
-            f"Hi {lead_name} team 👋\n\n"
-            f"Impressed by your reputation in {city}! 🔥\n\n"
-            f"I'm {brand.founder_name} from {brand.company_name}. We help {niche_label} scale local enquiries & sales by {service_desc}.{notes_clause}\n\n"
+            f"Hi {lead_name} team,\n\n"
+            f"Impressed by your reputation in {city}!\n\n"
+            f"I'm {brand.founder_name} from {brand.company_name}. We help {niche_label} scale local enquiries & sales through {service_desc}.{notes_clause}\n\n"
             f"Would love to share a quick 2-min custom strategy breakdown for {lead_name}! Open to a quick chat?\n\n"
-            f"👉 {booking_url}\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
@@ -254,7 +260,7 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         email_body = (
             f"Hi {lead_name} team,\n\n"
             f"Impressed by your business reputation in {city}!\n\n"
-            f"At {brand.company_name}, we help {niche_label} scale local customer enquiries by {service_desc}.{notes_clause}\n\n"
+            f"At {brand.company_name}, we help {niche_label} scale local customer enquiries through {service_desc}.{notes_clause}\n\n"
             f"Pick 10 minutes on my calendar to review a brief strategy breakdown: {booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name}\n"
@@ -263,19 +269,18 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
     else:
         # Default: Engaging & Direct
         wa_pitch = (
-            f"Hi {lead_name} team 👋\n\n"
-            f"I came across your business profile and noticed you've built a really strong local presence in {city}. 🔥\n\n"
-            f"But there's an opportunity I noticed 👀\n\n"
-            f"Your existing reputation can be turned into even more enquiries & customers by {service_desc} targeting buyers around {city}.{notes_clause}\n\n"
+            f"Hi {lead_name} team,\n\n"
+            f"I came across your business profile and noticed you've built a really strong local presence in {city}.\n\n"
+            f"Your existing reputation can be turned into even more enquiries & customers through {service_desc} targeting buyers around {city}.{notes_clause}\n\n"
             f"I'm {brand.founder_name} from {brand.company_name}. We help {niche_label} build high-converting digital presence designed to turn attention into enquiries.\n\n"
-            f"💡 For {lead_name}, I'd specifically look at:\n"
+            f"For {lead_name}, I'd specifically look at:\n"
             f"• {bullets[0]}\n"
             f"• {bullets[1]}\n"
             f"• {bullets[2]}\n"
             f"• {bullets[3]}\n\n"
             f"I have a few ideas specifically for {lead_name} that I can show you.\n\n"
-            f"Would you be open to a quick 10-minute call this week? I can share the ideas & work samples first — no obligation. 😉\n\n"
-            f"👉 {booking_url}\n\n"
+            f"Would you be open to a quick 10-minute call this week? I can share the ideas & work samples first -- no obligation.\n\n"
+            f"{booking_url}\n\n"
             f"Best regards,\n"
             f"{brand.founder_name} | {brand.company_name}"
         )
@@ -283,8 +288,8 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
         email_body = (
             f"Hi {lead_name} team,\n\n"
             f"I came across your profile while reviewing top businesses in {city} and was impressed by your strong local presence.\n\n"
-            f"At {brand.company_name}, we help {niche_label} turn local reputation into consistent customer enquiries by {service_desc}.{notes_clause}\n\n"
-            f"💡 For {lead_name}, our strategy includes:\n"
+            f"At {brand.company_name}, we help {niche_label} turn local reputation into consistent customer enquiries through {service_desc}.{notes_clause}\n\n"
+            f"For {lead_name}, our strategy includes:\n"
             f"- {bullets[0]}\n"
             f"- {bullets[1]}\n"
             f"- {bullets[2]}\n"
@@ -295,13 +300,14 @@ def format_pitch_by_genre(lead_name: str, brand: BrandProfile, meta: dict, genre
             f"{brand.company_name}"
         )
 
-    return {
-        "subject": email_subj,
-        "body": email_body,
-        "whatsapp_pitch": wa_pitch,
-        "linkedin_pitch": wa_pitch,
-        "social_pitch": wa_pitch
+    res_clean = {
+        "subject": strip_emojis(email_subj),
+        "body": strip_emojis(email_body),
+        "whatsapp_pitch": strip_emojis(wa_pitch),
+        "linkedin_pitch": strip_emojis(wa_pitch),
+        "social_pitch": strip_emojis(wa_pitch)
     }
+    return res_clean
 
 
 
