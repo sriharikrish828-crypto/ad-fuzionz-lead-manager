@@ -25,7 +25,8 @@ DISALLOWED_DOMAINS = {
     "yellowpages.com", "quikr.com", "magicbricks.com", "housing.com", "99acres.com", 
     "facebook.com", "instagram.com", "tripadvisor.com", "yelp.com", "jd.com",
     "blogspot.com", "blogspot.in", "wordpress.com", "tumblr.com", "medium.com", "wixsite.com",
-    "gouv.fr", "gov.in", "gov", "edu", "aefe.gouv.fr", "wikipedia.org", "ecolerenan.com"
+    "gouv.fr", "gov.in", "gov", "edu", "aefe.gouv.fr", "wikipedia.org", "ecolerenan.com",
+    "scribd.com", "slideshare.net"
 }
 IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp", ".svg", ".css", ".js")
 
@@ -570,8 +571,8 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
             page = context.new_page()
             try:
                 url = f"https://www.google.com/maps/search/{quote_plus(search_term)}"
-                page.goto(url, timeout=3500)
-                page.wait_for_timeout(300)
+                page.goto(url, timeout=9000)
+                page.wait_for_timeout(400)
 
 
                 # Enhanced consent popup handler for cloud server IPs (EU/US/Asia Render servers)
@@ -912,7 +913,7 @@ def _sync_google_maps_scrape(search_term: str, target_limit: int, seen_ids: set)
             extracted.append({
                 "name": st,
                 "website": f"https://www.google.com/search?q={quote_plus(st + ' ' + loc_tag)}",
-                "phone": "+91 98427 03314",
+                "phone": "N/A",
                 "address": f"Main Road, {loc_tag}"
             })
 
@@ -997,9 +998,19 @@ async def search_web_brands(query: str, industry: str = "", location: str = "", 
         tasks = [process_candidate(item) for item in raw_candidates]
         processed_leads = [res for res in await asyncio.gather(*tasks) if res is not None]
 
+        seen_phones = set()
         for lead in processed_leads:
             if lead["name"].lower() in seen_ids or is_bad_business_name(lead["name"]):
                 continue
+
+            norm_phone = re.sub(r'\D', '', lead["phone"]) if lead["phone"] != "N/A" else ""
+            if norm_phone and len(norm_phone) >= 10:
+                if norm_phone in seen_phones:
+                    lead["phone"] = "N/A"
+                    lead["headline"] = f"Local Business | {lead['address'][:50]}"
+                else:
+                    seen_phones.add(norm_phone)
+
             seen_ids.add(lead["name"].lower())
             results.append(lead)
             if len(results) >= limit:
